@@ -1,0 +1,6 @@
+{
+  "name": "Control de Canastillos Delizia",
+  "description": "Sistema empresarial para el control de inventario, ingresos, salidas, stock, kardex, auditoría y gestión de canastillos retornables de la empresa DELIZIA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,448 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "username": "admin",
+      "passwordHash": "admin123",
+      "name": "Eduardo Workspace (Admin)",
+      "role": "Administrador",
+      "status": "Activo"
+    },
+    {
+      "id": "u2",
+      "username": "supervisor",
+      "passwordHash": "super123",
+      "name": "Carlos Supervisor",
+      "role": "Supervisor",
+      "status": "Activo"
+    },
+    {
+      "id": "u3",
+      "username": "operador",
+      "passwordHash": "op123",
+      "name": "Maria Delgado",
+      "role": "Operador",
+      "status": "Activo"
+    }
+  ],
+  "items": [
+    {
+      "id": "i1",
+      "code": "9000",
+      "name": "CANASTILLO",
+      "description": "CANASTILLO PLASTICO DE DISTRIBUCION",
+      "color": "#003366",
+      "capacity": 24,
+      "status": "Activo"
+    },
+    {
+      "id": "i2",
+      "code": "9006",
+      "name": "REJILLA METALICA",
+      "description": "REJILLA METALICA REFORZADA",
+      "color": "#64748b",
+      "capacity": 18,
+      "status": "Activo"
+    },
+    {
+      "id": "i3",
+      "code": "9004",
+      "name": "PALET DE MADERA",
+      "description": "PALET DE MADERA RETORNABLE",
+      "color": "#b45309",
+      "capacity": 30,
+      "status": "Activo"
+    }
+  ],
+  "movements": [
+    {
+      "id": "m_1784034062065_0_noqw",
+      "movementNumber": "MOV-0001",
+      "documentNumber": "1",
+      "orderNumber": "1",
+      "date": "2026-07-14",
+      "time": "13:01:02",
+      "type": "ingreso",
+      "itemId": "i1",
+      "quantity": 1000,
+      "entity": "Planta Central El Alto",
+      "responsible": "Andres alcocer",
+      "details": "",
+      "user": "admin",
+      "truckPlate": "",
+      "truckDriver": "",
+      "truckRoute": "",
+      "clientName": "",
+      "crateStatus": "Planta_Disponibles"
+    },
+    {
+      "id": "m_1784034119681_0_ssyw",
+      "movementNumber": "MOV-0002",
+      "documentNumber": "2",
+      "orderNumber": "2",
+      "date": "2026-07-14",
+      "time": "13:01:59",
+      "type": "salida",
+      "itemId": "i1",
+      "quantity": 100,
+      "entity": "DESAYUNOS VIACHA",
+      "responsible": "carlos alarcon",
+      "details": "",
+      "user": "admin",
+      "truckPlate": "",
+      "truckDriver": "",
+      "truckRoute": "",
+      "clientName": "DESAYUNOS VIACHA",
+      "crateStatus": "Clientes"
+    },
+    {
+      "id": "m_1784034252667_0_idgs",
+      "movementNumber": "MOV-0003",
+      "documentNumber": "3",
+      "orderNumber": "3",
+      "date": "2026-07-14",
+      "time": "13:04:12",
+      "type": "salida",
+      "itemId": "i1",
+      "quantity": 200,
+      "entity": "DESAYUNOS VIACHA",
+      "responsible": "cesar bautista",
+      "details": "",
+      "user": "admin",
+      "truckPlate": "",
+      "truckDriver": "",
+      "truckRoute": "",
+      "clientName": "DESAYUNOS VIACHA",
+      "crateStatus": "Clientes"
+    }
+  ],
+  "kardex": [
+    {
+      "id": "k_1784034062065",
+      "documentNumber": "1",
+      "orderNumber": "1",
+      "date": "2026-07-14",
+      "time": "13:01:02",
+      "type": "ingreso",
+      "code": "9000",
+      "item": "CANASTILLO",
+      "quantity": 1000,
+      "stockBefore": 0,
+      "stockAfter": 1000,
+      "user": "admin",
+      "entity": "Planta Central El Alto",
+      "details": ""
+    },
+    {
+      "id": "k_1784034119681",
+      "documentNumber": "2",
+      "orderNumber": "2",
+      "date": "2026-07-14",
+      "time": "13:01:59",
+      "type": "salida",
+      "code": "9000",
+      "item": "CANASTILLO",
+      "quantity": 100,
+      "stockBefore": 1000,
+      "stockAfter": 900,
+      "user": "admin",
+      "entity": "DESAYUNOS VIACHA",
+      "details": ""
+    },
+    {
+      "id": "k_1784034252667",
+      "documentNumber": "3",
+      "orderNumber": "3",
+      "date": "2026-07-14",
+      "time": "13:04:12",
+      "type": "salida",
+      "code": "9000",
+      "item": "CANASTILLO",
+      "quantity": 200,
+      "stockBefore": 900,
+      "stockAfter": 700,
+      "user": "admin",
+      "entity": "DESAYUNOS VIACHA",
+      "details": ""
+    }
+  ],
+  "audit": [
+    {
+      "id": "a_1784034252671_m90bm",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "13:04:12",
+      "ip": "200.105.164.90",
+      "action": "REGISTRO MULTI-MOVIMIENTO (SALIDA)",
+      "beforeChange": "{\"documentNumber\":\"3\",\"itemCount\":1}",
+      "afterChange": "[{\"id\":\"m_1784034252667_0_idgs\",\"movementNumber\":\"MOV-0003\",\"documentNumber\":\"3\",\"orderNumber\":\"3\",\"date\":\"2026-07-14\",\"time\":\"13:04:12\",\"type\":\"salida\",\"itemId\":\"i1\",\"quantity\":200,\"entity\":\"DESAYUNOS VIACHA\",\"responsible\":\"cesar bautista\",\"details\":\"\",\"user\":\"admin\",\"truckPlate\":\"\",\"truckDriver\":\"\",\"truckRoute\":\"\",\"clientName\":\"DESAYUNOS VIACHA\",\"crateStatus\":\"Clientes\"}]"
+    },
+    {
+      "id": "a_1784034252664_wzuzv",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "13:04:12",
+      "ip": "200.105.164.90",
+      "action": "CREACIÓN DE RESPONSABLE",
+      "beforeChange": "{}",
+      "afterChange": "{\"id\":\"r_1784034252660_ofnyn\",\"name\":\"CESAR BAUTISTA\"}"
+    },
+    {
+      "id": "a_1784034119684_k32qt",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "13:01:59",
+      "ip": "181.114.118.170",
+      "action": "REGISTRO MULTI-MOVIMIENTO (SALIDA)",
+      "beforeChange": "{\"documentNumber\":\"2\",\"itemCount\":1}",
+      "afterChange": "[{\"id\":\"m_1784034119681_0_ssyw\",\"movementNumber\":\"MOV-0002\",\"documentNumber\":\"2\",\"orderNumber\":\"2\",\"date\":\"2026-07-14\",\"time\":\"13:01:59\",\"type\":\"salida\",\"itemId\":\"i1\",\"quantity\":100,\"entity\":\"DESAYUNOS VIACHA\",\"responsible\":\"carlos alarcon\",\"details\":\"\",\"user\":\"admin\",\"truckPlate\":\"\",\"truckDriver\":\"\",\"truckRoute\":\"\",\"clientName\":\"DESAYUNOS VIACHA\",\"crateStatus\":\"Clientes\"}]"
+    },
+    {
+      "id": "a_1784034119672_ahpl9",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "13:01:59",
+      "ip": "181.114.118.170",
+      "action": "CREACIÓN DE RESPONSABLE",
+      "beforeChange": "{}",
+      "afterChange": "{\"id\":\"r_1784034119666_qdekb\",\"name\":\"CARLOS ALARCON\"}"
+    },
+    {
+      "id": "a_1784034062069_altvp",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "13:01:02",
+      "ip": "200.105.164.90",
+      "action": "REGISTRO MULTI-MOVIMIENTO (INGRESO)",
+      "beforeChange": "{\"documentNumber\":\"1\",\"itemCount\":1}",
+      "afterChange": "[{\"id\":\"m_1784034062065_0_noqw\",\"movementNumber\":\"MOV-0001\",\"documentNumber\":\"1\",\"orderNumber\":\"1\",\"date\":\"2026-07-14\",\"time\":\"13:01:02\",\"type\":\"ingreso\",\"itemId\":\"i1\",\"quantity\":1000,\"entity\":\"Planta Central El Alto\",\"responsible\":\"Andres alcocer\",\"details\":\"\",\"user\":\"admin\",\"truckPlate\":\"\",\"truckDriver\":\"\",\"truckRoute\":\"\",\"clientName\":\"\",\"crateStatus\":\"Planta_Disponibles\"}]"
+    },
+    {
+      "id": "a_1784034062063_r42a5",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "13:01:02",
+      "ip": "200.105.164.90",
+      "action": "CREACIÓN DE RESPONSABLE",
+      "beforeChange": "{}",
+      "afterChange": "{\"id\":\"r_1784034062058_r94kb\",\"name\":\"ANDRES ALCOCER\"}"
+    },
+    {
+      "id": "a_1784034003287_37ohf",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "13:00:03",
+      "ip": "181.114.118.170",
+      "action": "MODIFICACIÓN DE CONDUCTOR/RUTA",
+      "beforeChange": "{\"id\":\"dr3\",\"jefeName\":\"\",\"driverName\":\"WILMER CONDORI\",\"route\":\"VIACHA CARRETERA\",\"plate\":\"9301-BHP\"}",
+      "afterChange": "{\"id\":\"dr3\",\"jefeName\":\"DESAYUNOS VIACHA\",\"driverName\":\"CESAR BAUTISTA\",\"route\":\"RUTA 1\",\"plate\":\"\"}"
+    },
+    {
+      "id": "a_1784033983678_20g6v",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "12:59:43",
+      "ip": "181.114.118.170",
+      "action": "ELIMINACIÓN DE CONDUCTOR/RUTA",
+      "beforeChange": "{\"id\":\"dr2\",\"jefeName\":\"\",\"driverName\":\"EDDY CALLE\",\"route\":\"VIACHA PERIFÉRICA\",\"plate\":\"2938-ZMX\"}",
+      "afterChange": "{}"
+    },
+    {
+      "id": "a_1784033976673_p17ev",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "12:59:36",
+      "ip": "181.114.118.170",
+      "action": "ELIMINACIÓN DE CONDUCTOR/RUTA",
+      "beforeChange": "{\"id\":\"dr1\",\"jefeName\":\"\",\"driverName\":\"HUGO APALA\",\"route\":\"VIACHA CENTRO\",\"plate\":\"4820-KDL\"}",
+      "afterChange": "{}"
+    },
+    {
+      "id": "a_1784033967479_ec7t5",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "12:59:27",
+      "ip": "181.114.118.170",
+      "action": "MODIFICACIÓN DE UBICACIÓN",
+      "beforeChange": "{\"id\":\"l4\",\"name\":\"Distribuidor Zona Sur (Agencia Calacoto)\",\"type\":\"destino\"}",
+      "afterChange": "{\"id\":\"l4\",\"name\":\"DESAYUNOS VIACHA\",\"type\":\"destino\"}"
+    },
+    {
+      "id": "a_1784033939347_dngqj",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "12:58:59",
+      "ip": "181.114.118.170",
+      "action": "ELIMINACIÓN DE UBICACIÓN",
+      "beforeChange": "{\"id\":\"l5\",\"name\":\"Distribuidor Zona Norte\",\"type\":\"destino\"}",
+      "afterChange": "{}"
+    },
+    {
+      "id": "a_1784033936737_y6trr",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "12:58:56",
+      "ip": "181.114.118.170",
+      "action": "ELIMINACIÓN DE UBICACIÓN",
+      "beforeChange": "{\"id\":\"l6\",\"name\":\"Agencia Central Sopocachi\",\"type\":\"destino\"}",
+      "afterChange": "{}"
+    },
+    {
+      "id": "a_1784033934074_9dih2",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "12:58:54",
+      "ip": "181.114.118.170",
+      "action": "ELIMINACIÓN DE UBICACIÓN",
+      "beforeChange": "{\"id\":\"l7\",\"name\":\"Cliente Particular\",\"type\":\"destino\"}",
+      "afterChange": "{}"
+    },
+    {
+      "id": "a_1784033930389_nn1nm",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "12:58:50",
+      "ip": "181.114.118.170",
+      "action": "ELIMINACIÓN DE UBICACIÓN",
+      "beforeChange": "{\"id\":\"l_1784033554491_7acf8\",\"name\":\"VIECHA\",\"type\":\"destino\"}",
+      "afterChange": "{}"
+    },
+    {
+      "id": "a_1784033927333_efnas",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "12:58:47",
+      "ip": "181.114.118.170",
+      "action": "ELIMINACIÓN DE UBICACIÓN",
+      "beforeChange": "{\"id\":\"l_1784031877843_xc32a\",\"name\":\"DESAYUNOS VIACHA\",\"type\":\"destino\"}",
+      "afterChange": "{}"
+    },
+    {
+      "id": "a_1784033554497_tmw2p",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "12:52:34",
+      "ip": "181.114.118.170",
+      "action": "CREACIÓN DE UBICACIÓN",
+      "beforeChange": "{}",
+      "afterChange": "{\"id\":\"l_1784033554491_7acf8\",\"name\":\"VIECHA\",\"type\":\"destino\"}"
+    },
+    {
+      "id": "a_1784032865388_4et1f",
+      "user": "admin",
+      "date": "2026-07-14",
+      "time": "12:41:05",
+      "ip": "200.105.164.90",
+      "action": "INICIO DE SESIÓN",
+      "beforeChange": "{}",
+      "afterChange": "{\"username\":\"admin\",\"role\":\"Administrador\"}"
+    },
+    {
+      "id": "a_1783701662119_0reax",
+      "user": "operador",
+      "date": "2026-07-10",
+      "time": "16:41:02",
+      "ip": "200.105.164.90",
+      "action": "INICIO DE SESIÓN",
+      "beforeChange": "{}",
+      "afterChange": "{\"username\":\"operador\",\"role\":\"Operador\"}"
+    },
+    {
+      "id": "a_1783699167729_dcitp",
+      "user": "admin",
+      "date": "2026-07-10",
+      "time": "15:59:27",
+      "ip": "200.105.164.90",
+      "action": "INICIO DE SESIÓN",
+      "beforeChange": "{}",
+      "afterChange": "{\"username\":\"admin\",\"role\":\"Administrador\"}"
+    },
+    {
+      "id": "a1",
+      "user": "admin",
+      "date": "2026-07-08",
+      "time": "08:30:15",
+      "ip": "192.168.1.50",
+      "action": "CREACIÓN DE MOVIMIENTO (INGRESO)",
+      "beforeChange": "{}",
+      "afterChange": "{\"movementNumber\":\"MOV-0001\",\"itemId\":\"i1\",\"quantity\":150,\"entity\":\"Fábrica Central El Alto\"}"
+    },
+    {
+      "id": "a2",
+      "user": "supervisor",
+      "date": "2026-07-08",
+      "time": "10:16:02",
+      "ip": "192.168.1.102",
+      "action": "CREACIÓN DE MOVIMIENTO (SALIDA)",
+      "beforeChange": "{}",
+      "afterChange": "{\"movementNumber\":\"MOV-0002\",\"itemId\":\"i1\",\"quantity\":50,\"entity\":\"Distribuidor Zona Sur\"}"
+    }
+  ],
+  "config": {
+    "companyName": "DELIZIA - COMPAÑÍA DE ALIMENTOS LTDA.",
+    "logoUrl": "https://www.delizia.com.bo/wp-content/uploads/2019/12/logo-delizia.png",
+    "primaryColor": "#0b4a9b",
+    "secondaryColor": "#f15a24"
+  },
+  "locations": [
+    {
+      "id": "l1",
+      "name": "Planta Central El Alto",
+      "type": "procedencia"
+    },
+    {
+      "id": "l2",
+      "name": "Fábrica Central El Alto",
+      "type": "procedencia"
+    },
+    {
+      "id": "l3",
+      "name": "Planta de Producción Achachicala",
+      "type": "procedencia"
+    },
+    {
+      "id": "l4",
+      "name": "DESAYUNOS VIACHA",
+      "type": "destino"
+    }
+  ],
+  "responsibles": [
+    {
+      "id": "r1",
+      "name": "JUAN PÉREZ"
+    },
+    {
+      "id": "r2",
+      "name": "MARCOS VARGAS"
+    },
+    {
+      "id": "r3",
+      "name": "JAIME FLORES"
+    },
+    {
+      "id": "r4",
+      "name": "ÁNGELA CHOQUE"
+    },
+    {
+      "id": "r_1784034062058_r94kb",
+      "name": "ANDRES ALCOCER"
+    },
+    {
+      "id": "r_1784034119666_qdekb",
+      "name": "CARLOS ALARCON"
+    },
+    {
+      "id": "r_1784034252660_ofnyn",
+      "name": "CESAR BAUTISTA"
+    }
+  ],
+  "driversRoutes": [
+    {
+      "id": "dr3",
+      "jefeName": "DESAYUNOS VIACHA",
+      "driverName": "CESAR BAUTISTA",
+      "route": "RUTA 1",
+      "plate": ""
+    }
+  ]
+}
