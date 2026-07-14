@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Custom Scrollbar Styles for elegant UI */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Custom transitions and glassmorphism styles inspired by Fluent and Material 3 */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.dark .glass-panel {
+  background: rgba(31, 41, 55, 0.7);
+  border: 1px solid rgba(75, 85, 99, 0.4);
+}
+
+.active-glow {
+  box-shadow: 0 0 15px rgba(0, 51, 102, 0.15);
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+.pulse-slow {
+  animation: pulse-slow 3s infinite ease-in-out;
+}
+
+/* Reglas globales de legibilidad para inputs, selects y textareas */
+input, select, textarea {
+  color: #1e293b !important; /* En tema claro, texto oscuro (slate-800) */
+  background-color: #f8fafc; /* bg-slate-50 */
+}
+
+/* Cuando se tiene foco en tema claro */
+input:focus, select:focus, textarea:focus {
+  background-color: #ffffff !important;
+}
+
+/* En tema oscuro (.dark) */
+.dark input, .dark select, .dark textarea {
+  background-color: #1e293b !important; /* bg-slate-800 */
+  color: #f8fafc !important; /* text-slate-50 */
+  border-color: #334155 !important; /* border-slate-700 */
+}
+
+/* En tema oscuro con foco */
+.dark input:focus, .dark select:focus, .dark textarea:focus {
+  background-color: #0f172a !important; /* bg-slate-900 */
+}
+
+/* Marcadores de posición (placeholders) */
+input::placeholder, textarea::placeholder {
+  color: #94a3b8; /* text-slate-400 */
+}
+.dark input::placeholder, .dark textarea::placeholder {
+  color: #64748b; /* text-slate-500 */
+}
+
+/* Opciones de los selects en tema oscuro */
+.dark select option {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+/* Ocultar flechas de incremento/decremento (spinners) en inputs numéricos */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
