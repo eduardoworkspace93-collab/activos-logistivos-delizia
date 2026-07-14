@@ -13,6 +13,7 @@ type SortField = 'code' | 'name' | 'totalIngresos' | 'totalSalidas' | 'stockActu
 type SortOrder = 'asc' | 'desc';
 
 export default function Stock({ stocks, userRole, currentUser }: StockProps) {
+  const showHistoricGeneral = false; // Flag to show or hide Histórico General columns in Stock report
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'Todos' | 'Activo' | 'Inactivo' | 'Bajo Stock'>('Todos');
   const [sortField, setSortField] = useState<SortField>('stockActual');
@@ -249,7 +250,9 @@ export default function Stock({ stocks, userRole, currentUser }: StockProps) {
               ) : (
                 <tr className="bg-slate-100 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                   <th colSpan={2} className="p-2 px-4 border-r border-slate-200">Datos del Activo</th>
-                  <th colSpan={2} className="p-2 text-center border-r border-slate-200 bg-slate-50/50">Histórico General</th>
+                  {showHistoricGeneral && (
+                    <th colSpan={2} className="p-2 text-center border-r border-slate-200 bg-slate-50/50">Histórico General</th>
+                  )}
                   <th colSpan={4} className="p-2 text-center border-r border-slate-200 bg-sky-50/20 text-[#003366]">PLANTA GENERAL (Desglose de Áreas)</th>
                   <th colSpan={4} className="p-2 text-center bg-orange-50/15 text-orange-700">LOGÍSTICA EXTERNA</th>
                   <th className="p-2 text-center">Estado</th>
@@ -285,12 +288,16 @@ export default function Stock({ stocks, userRole, currentUser }: StockProps) {
                       Descripción <ArrowUpDown className="w-3 h-3" />
                     </div>
                   </th>
-                  <th className="p-2.5 text-center cursor-pointer hover:bg-slate-100/50" onClick={() => handleSort('totalIngresos')}>
-                    Ingresos
-                  </th>
-                  <th className="p-2.5 text-center cursor-pointer hover:bg-slate-100/50 border-r border-slate-200" onClick={() => handleSort('totalSalidas')}>
-                    Salidas
-                  </th>
+                  {showHistoricGeneral && (
+                    <>
+                      <th className="p-2.5 text-center cursor-pointer hover:bg-slate-100/50" onClick={() => handleSort('totalIngresos')}>
+                        Ingresos
+                      </th>
+                      <th className="p-2.5 text-center cursor-pointer hover:bg-slate-100/50 border-r border-slate-200" onClick={() => handleSort('totalSalidas')}>
+                        Salidas
+                      </th>
+                    </>
+                  )}
                   {/* Planta breakdown detailed columns */}
                   <th className="p-2.5 text-center font-extrabold text-[#003366] bg-[#003366]/5">GLOBAL DE STOCK</th>
                   <th className="p-2.5 text-center font-medium text-slate-500">STOCK ACTIVOS LOGÍSTICOS</th>
@@ -308,7 +315,7 @@ export default function Stock({ stocks, userRole, currentUser }: StockProps) {
             <tbody className="divide-y divide-slate-150 text-[11px]">
               {filteredStocks.length === 0 ? (
                 <tr>
-                  <td colSpan={isRestricted ? 4 : 13} className="p-8 text-center text-slate-400">
+                  <td colSpan={isRestricted ? 4 : (showHistoricGeneral ? 13 : 11)} className="p-8 text-center text-slate-400">
                     <Layers className="w-6 h-6 mx-auto opacity-30 mb-1.5" />
                     <span>No hay resultados que coincidan con los filtros</span>
                   </td>
@@ -347,8 +354,12 @@ export default function Stock({ stocks, userRole, currentUser }: StockProps) {
                     <tr key={s.id} className="hover:bg-slate-50/40">
                       <td className="p-2.5 px-4 font-mono font-bold text-slate-900">{s.code}</td>
                       <td className="p-2.5 px-4 border-r border-slate-200 font-semibold text-slate-800">{s.name}</td>
-                      <td className="p-2.5 text-center font-mono text-emerald-600">+{s.totalIngresos}</td>
-                      <td className="p-2.5 text-center font-mono text-orange-600 border-r border-slate-200">-{s.totalSalidas}</td>
+                      {showHistoricGeneral && (
+                        <>
+                          <td className="p-2.5 text-center font-mono text-emerald-600">+{s.totalIngresos}</td>
+                          <td className="p-2.5 text-center font-mono text-orange-600 border-r border-slate-200">-{s.totalSalidas}</td>
+                        </>
+                      )}
                       
                       {/* Planta breakdown cells */}
                       <td className="p-2.5 text-center font-mono font-extrabold text-sm text-[#003366] bg-[#003366]/5">

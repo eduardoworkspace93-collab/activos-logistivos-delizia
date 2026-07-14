@@ -308,6 +308,14 @@ export default function DeudasChoferes({
     return selectedJefe.drivers[selectedDriverKey.toUpperCase()] || null;
   }, [selectedJefe, selectedDriverKey]);
 
+  // Check if there are crossed balances between drivers within the selected route/jefe
+  const hasInternalDriverMismatch = useMemo(() => {
+    if (!selectedJefe) return false;
+    const jefeHasZeroBalance = selectedJefe.totalBalance === 0;
+    const hasDriversWithBalance = Object.values(selectedJefe.drivers).some((d: any) => d.totalBalance !== 0);
+    return jefeHasZeroBalance && hasDriversWithBalance;
+  }, [selectedJefe]);
+
   // Get complete chronological ledger for selected Jefe / Driver
   const ledgerMovements = useMemo(() => {
     if (!selectedJefe) return [];
@@ -455,7 +463,7 @@ export default function DeudasChoferes({
             </select>
           </div>
 
-          <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1.5 cursor-pointer select-none transition-all dark:bg-slate-850 dark:border-slate-750">
+          <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1.5 cursor-pointer select-none transition-all dark:bg-slate-800 dark:border-slate-700">
             <input
               type="checkbox"
               checked={onlyWithDebts}
@@ -472,7 +480,7 @@ export default function DeudasChoferes({
         
         {/* LEFT COLUMN: LIST OF JEFES PRINCIPALES */}
         <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col h-[520px] dark:bg-slate-900 dark:border-slate-800">
-          <div className="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center dark:bg-slate-850 dark:border-slate-750">
+          <div className="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center dark:bg-slate-800 dark:border-slate-700">
             <span className="font-extrabold text-[9px] uppercase tracking-wider text-slate-400 flex items-center gap-1">
               <Users className="w-3.5 h-3.5 text-[#003366]" />
               Jefes Principales ({filteredJefes.length})
@@ -543,13 +551,15 @@ export default function DeudasChoferes({
             <div className="flex flex-col h-full">
               
               {/* JEFE MAIN HEADER */}
-              <div className="p-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 dark:bg-slate-850 dark:border-slate-750">
+              <div className="p-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 dark:bg-slate-800 dark:border-slate-700">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] bg-[#003366] text-white px-2 py-0.5 rounded font-black uppercase">
-                      Jefe Principal
+                      {selectedDriver ? 'Saldos de Chofer' : 'Jefe Principal'}
                     </span>
-                    <span className="text-[9px] text-slate-400 font-bold">Saldos Consolidados</span>
+                    <span className="text-[9px] text-slate-400 font-bold">
+                      {selectedDriver ? `Chofer: ${selectedDriver.name}` : 'Saldos Consolidados'}
+                    </span>
                   </div>
                   <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase">
                     {selectedJefe.jefeName}
@@ -577,9 +587,9 @@ export default function DeudasChoferes({
               </div>
 
               {/* OUTSTANDING BALANCES ROW BY ITEM */}
-              <div className="p-3 bg-slate-50/50 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2 dark:bg-slate-900/50 dark:border-slate-750">
-                {(Object.values(selectedJefe.debts) as any[]).map(debt => (
-                  <div key={debt.itemId} className="p-2 bg-white border border-slate-150 rounded-lg shadow-2xs dark:bg-slate-850 dark:border-slate-750">
+              <div className="p-3 bg-slate-50/50 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2 dark:bg-slate-900/50 dark:border-slate-700">
+                {(Object.values(selectedDriver ? selectedDriver.debts : selectedJefe.debts) as any[]).map(debt => (
+                  <div key={debt.itemId} className="p-2 bg-white border border-slate-150 rounded-lg shadow-2xs dark:bg-slate-800 dark:border-slate-700">
                     <div className="flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: debt.itemColor }} />
                       <span className="text-[8px] font-bold text-slate-400 uppercase truncate">
@@ -602,12 +612,22 @@ export default function DeudasChoferes({
                 ))}
               </div>
 
+              {/* RECONCILIATION BANNER IF CROSS-DRIVER MISMATCH OCCURS */}
+              {hasInternalDriverMismatch && (
+                <div className="mx-3 mt-3 p-2.5 bg-sky-50 border border-sky-200 rounded-lg text-sky-800 text-[10px] flex items-start gap-2 animate-fade-in dark:bg-blue-950/20 dark:border-blue-900/40 dark:text-blue-300">
+                  <AlertCircle className="w-4 h-4 text-sky-600 shrink-0 mt-0.5 dark:text-blue-400" />
+                  <div>
+                    <span className="font-bold">Aviso de Conciliación de Ruta:</span> El saldo general de esta ruta está liquidado (0 u.), pero existen deudas/saldos individuales cruzados entre sus choferes (por ejemplo, préstamos registrados a "Sin Chofer" y devoluciones registradas a un chofer específico). El saldo neto global está correcto.
+                  </div>
+                </div>
+              )}
+
               {/* INNER LAYOUT: CHOFERES ON LEFT, LEDGER/HISTORY ON RIGHT */}
               <div className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden">
                 
                 {/* SUB-LIST: DRIVERS (CHOFERES) UNDER JEFE */}
                 <div className="md:col-span-5 border-r border-slate-200 overflow-y-auto divide-y divide-slate-150 h-full dark:border-slate-800">
-                  <div className="p-2 bg-slate-50/30 text-[9px] font-bold text-slate-400 uppercase tracking-widest sticky top-0 dark:bg-slate-850">
+                  <div className="p-2 bg-slate-50/30 text-[9px] font-bold text-slate-400 uppercase tracking-widest sticky top-0 dark:bg-slate-800">
                     Choferes de la Ruta
                   </div>
 
@@ -642,6 +662,10 @@ export default function DeudasChoferes({
                             <span className="inline-block bg-orange-100 text-orange-800 text-[10px] font-bold px-1.5 py-0.5 rounded font-mono border border-orange-200">
                               {driver.totalBalance} u.
                             </span>
+                          ) : driver.totalBalance < 0 ? (
+                            <span className="inline-block bg-blue-50 text-blue-700 text-[10px] font-bold px-1.5 py-0.5 rounded font-mono border border-blue-100" title="Saldo a favor / Devuelto de más">
+                              {driver.totalBalance} u.
+                            </span>
                           ) : (
                             <span className="inline-block bg-emerald-50 text-emerald-700 text-[10px] font-medium px-1.5 py-0.5 rounded font-mono border border-emerald-100">
                               0 u.
@@ -655,7 +679,7 @@ export default function DeudasChoferes({
 
                 {/* SUB-PANEL: DETAILED CHRONOLOGICAL LEDGER (HISTORIAL) */}
                 <div className="md:col-span-7 overflow-y-auto h-full flex flex-col bg-slate-50/10 dark:bg-slate-900/10">
-                  <div className="p-2 bg-slate-50/30 border-b border-slate-150 flex justify-between items-center sticky top-0 z-10 dark:bg-slate-850 dark:border-slate-800">
+                  <div className="p-2 bg-slate-50/30 border-b border-slate-150 flex justify-between items-center sticky top-0 z-10 dark:bg-slate-800 dark:border-slate-700">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
                       <BookOpen className="w-3 h-3 text-[#f15a24]" />
                       Ledger de Movimientos {selectedDriver ? `(${selectedDriver.name})` : '(Todos)'}
@@ -674,7 +698,7 @@ export default function DeudasChoferes({
                         return (
                           <div 
                             key={m.id} 
-                            className="bg-white border border-slate-200 p-2.5 rounded-lg shadow-2xs space-y-2 dark:bg-slate-850 dark:border-slate-750"
+                            className="bg-white border border-slate-200 p-2.5 rounded-lg shadow-2xs space-y-2 dark:bg-slate-800 dark:border-slate-700"
                           >
                             <div className="flex justify-between items-start">
                               <div className="space-y-0.5">

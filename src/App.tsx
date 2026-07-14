@@ -5,7 +5,7 @@ import {
 import { 
   Layers, Package, ChevronRight, Menu, LogOut, Lock, 
   Moon, Sun, ClipboardList, Database, ShieldAlert, BarChart3, 
-  Settings, UserCheck, Key, RefreshCw, X, ArrowLeftRight, Scale
+  Settings, UserCheck, Key, RefreshCw, X, ArrowLeftRight, Scale, Trash2
 } from 'lucide-react';
 
 import Dashboard from './components/Dashboard.js';
@@ -19,6 +19,7 @@ import Auditoria from './components/Auditoria.js';
 import Configuracion from './components/Configuracion.js';
 import PrintActa from './components/PrintActa.js';
 import DeudasChoferes from './components/DeudasChoferes.js';
+import AlmacenDanados from './components/AlmacenDanados.js';
 import { FullLogo, MobileIcon } from './components/Logo.js';
 
 export default function App() {
@@ -42,7 +43,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
 
   // Layout / Side Navigation
-  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'movements' | 'stock' | 'debts' | 'kardex' | 'reports' | 'users' | 'audit' | 'settings'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'movements' | 'stock' | 'debts' | 'kardex' | 'reports' | 'users' | 'audit' | 'settings' | 'damaged'>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [movementInitialType, setMovementInitialType] = useState<'ingreso' | 'salida'>('ingreso');
   const [movementPrefill, setMovementPrefill] = useState<{ entity: string; driver: string } | null>(null);
@@ -76,7 +77,6 @@ export default function App() {
   useEffect(() => {
     const savedToken = localStorage.getItem('delizia_token');
     const savedUser = localStorage.getItem('delizia_user');
-    const savedDarkMode = localStorage.getItem('delizia_dark_mode') === 'true';
 
     if (savedToken && savedUser) {
       setToken(savedToken);
@@ -87,10 +87,10 @@ export default function App() {
       }
     }
 
-    setDarkMode(savedDarkMode);
-    if (savedDarkMode) {
-      document.documentElement.classList.add('dark');
-    }
+    // Force high-contrast light theme for maximum readability as requested
+    setDarkMode(false);
+    localStorage.setItem('delizia_dark_mode', 'false');
+    document.documentElement.classList.remove('dark');
 
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
@@ -651,6 +651,7 @@ export default function App() {
     { id: 'items', label: 'Ítems a Controlar', icon: Package, roles: ['Administrador', 'Supervisor', 'Operador', 'OPC', 'OPP', 'OPA'] },
     { id: 'movements', label: 'Ingresos / Salidas', icon: ArrowLeftRight, roles: ['Administrador', 'Supervisor', 'Operador', 'OPC', 'OPP', 'OPA'] },
     { id: 'stock', label: 'Control de Stock', icon: Layers, roles: ['Administrador', 'Supervisor', 'Operador', 'OPC', 'OPP', 'OPA'] },
+    { id: 'damaged', label: 'Prod. Dañados', icon: Trash2, roles: ['Administrador'] },
     { id: 'debts', label: 'Préstamos y Deudas', icon: Scale, roles: ['Administrador', 'Supervisor', 'Operador', 'OPC', 'OPP', 'OPA'] },
     { id: 'kardex', label: 'Kardex Histórico', icon: ClipboardList, roles: ['Administrador', 'Supervisor'] },
     { id: 'reports', label: 'Informes & Reportes', icon: Database, roles: ['Administrador', 'Supervisor'] },
@@ -734,15 +735,6 @@ export default function App() {
           >
             <Key className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
             <span className="hidden md:inline">Contraseña</span>
-          </button>
-
-          {/* Theme selection */}
-          <button 
-            onClick={handleToggleDarkMode}
-            className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-lg cursor-pointer dark:hover:bg-slate-800"
-            title="Cambiar tema"
-          >
-            {darkMode ? <Sun className="w-3.5 h-3.5 text-yellow-500" /> : <Moon className="w-3.5 h-3.5" />}
           </button>
 
           {/* Log out */}
@@ -906,6 +898,17 @@ export default function App() {
 
           {currentView === 'audit' && (
             <Auditoria audit={audit} />
+          )}
+
+          {currentView === 'damaged' && (
+            <AlmacenDanados
+              items={items}
+              movements={movements}
+              stocks={stocks}
+              responsibles={responsibles}
+              onRegisterMovement={handleRegisterMovement}
+              currentUser={currentUser}
+            />
           )}
 
           {currentView === 'settings' && (

@@ -718,7 +718,7 @@ export class LocalDatabase {
         .reduce((sum, m) => sum + m.quantity, 0);
 
       const isInternalStatus = (status: string) => {
-        return ['Planta', 'Planta_Disponibles', 'Produccion', 'Planta_Almacen'].includes(status);
+        return ['Planta', 'Planta_Disponibles', 'Produccion', 'Planta_Almacen', 'Dañado', 'Reparación'].includes(status);
       };
 
       const totalSalidas = itemMovements
@@ -834,12 +834,27 @@ export class LocalDatabase {
               alterCustomStock(status, qty);
             }
 
-            // If it is a return from outside, it must decrease the outside category
+            // If it is a return from outside, it must decrease the outside category (reparto or clientes)
             if (!isInternalEntity(m.entity) || (m.truckDriver && m.truckDriver.trim() !== '-')) {
+              let amountToDecrease = qty;
               if (m.truckDriver && m.truckDriver.trim() !== '' && m.truckDriver.trim() !== '-') {
-                reparto -= qty;
+                // Return from a driver: prefer to decrease from reparto first, then clientes if needed
+                if (reparto >= amountToDecrease) {
+                  reparto -= amountToDecrease;
+                } else {
+                  amountToDecrease -= Math.max(0, reparto);
+                  reparto = 0;
+                  clientes -= amountToDecrease;
+                }
               } else {
-                clientes -= qty;
+                // Return from a client direct: prefer to decrease from clientes first, then reparto if needed
+                if (clientes >= amountToDecrease) {
+                  clientes -= amountToDecrease;
+                } else {
+                  amountToDecrease -= Math.max(0, clientes);
+                  clientes = 0;
+                  reparto -= amountToDecrease;
+                }
               }
             }
           } else if (m.type === 'salida') {

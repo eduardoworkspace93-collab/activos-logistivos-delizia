@@ -43,8 +43,8 @@ export interface Movement {
   truckDriver?: string;
   truckRoute?: string;
   clientName?: string;
-  crateStatus: 'Planta' | 'Planta_Disponibles' | 'Produccion' | 'Planta_Almacen' | 'Reparto' | 'Clientes' | 'Pendiente' | 'Dañado' | 'Reparación';
-  fromStatus?: 'Planta' | 'Planta_Disponibles' | 'Produccion' | 'Planta_Almacen' | 'Reparto' | 'Clientes' | 'Pendiente' | 'Dañado' | 'Reparación';
+  crateStatus: 'Planta' | 'Planta_Disponibles' | 'Produccion' | 'Planta_Almacen' | 'Reparto' | 'Clientes' | 'Pendiente' | 'Dañado' | 'Reparación' | 'Baja_Definitiva';
+  fromStatus?: 'Planta' | 'Planta_Disponibles' | 'Produccion' | 'Planta_Almacen' | 'Reparto' | 'Clientes' | 'Pendiente' | 'Dañado' | 'Reparación' | 'Baja_Definitiva';
 
   // Resolved fields
   itemCode?: string;
