@@ -873,6 +873,7 @@ export default function App() {
               driversRoutes={driversRoutes}
               currentUser={currentUser}
               operationalAreas={operationalAreas}
+              onSaveOperationalArea={handleSaveOperationalArea}
             />
           )}
 
@@ -892,7 +893,7 @@ export default function App() {
           )}
 
           {currentView === 'kardex' && (
-            <Kardex kardex={kardex} items={items} onRefresh={fetchAllData} />
+            <Kardex kardex={kardex} items={items} onRefresh={fetchAllData} operationalAreas={operationalAreas} />
           )}
 
           {currentView === 'reports' && (

@@ -36,7 +36,7 @@ export default function Stock({ stocks, userRole, currentUser }: StockProps) {
     switch (area) {
       case 'activos':
         return {
-          label: 'Disponibles Planta (Vacíos)',
+          label: 'Activos Logísticos',
           field: 'plantaDisponibles' as const,
           description: 'Área de Activos Logísticos (Recepción de Vacíos)'
         };
@@ -48,7 +48,7 @@ export default function Stock({ stocks, userRole, currentUser }: StockProps) {
         };
       case 'almacen':
         return {
-          label: 'Stock Almacén Planta',
+          label: 'Stock Almacén Producto Terminado',
           field: 'plantaAlmacen' as const,
           description: 'Área de Almacén de Producto Terminado (Cámaras/Despacho)'
         };
@@ -101,10 +101,10 @@ export default function Stock({ stocks, userRole, currentUser }: StockProps) {
         { key: 'name', label: 'Tipo de Activo' },
         { key: 'totalIngresos', label: 'Ingresos Totales' },
         { key: 'totalSalidas', label: 'Salidas Totales' },
-        { key: 'plantaGeneral', label: 'STOCK GENERAL PLANTA' },
-        { key: 'plantaDisponibles', label: 'STOCK DISPONIBLE PLANTA' },
-        { key: 'produccion', label: 'STOCK PRODUCCION' },
-        { key: 'plantaAlmacen', label: 'STOCK ALMACEN PLANTA' },
+        { key: 'plantaGeneral', label: 'GLOBAL DE STOCK' },
+        { key: 'plantaDisponibles', label: 'STOCK ACTIVOS LOGÍSTICOS' },
+        { key: 'produccion', label: 'STOCK PRODUCCIÓN' },
+        { key: 'plantaAlmacen', label: 'STOCK ALMACÉN PT' },
         { key: 'reparto', label: 'En Reparto (Camión)' },
         { key: 'clientes', label: 'En Clientes' },
         { key: 'pendientes', label: 'Pendiente de Devolución' },
@@ -251,7 +251,7 @@ export default function Stock({ stocks, userRole, currentUser }: StockProps) {
                   <th colSpan={2} className="p-2 px-4 border-r border-slate-200">Datos del Activo</th>
                   <th colSpan={2} className="p-2 text-center border-r border-slate-200 bg-slate-50/50">Histórico General</th>
                   <th colSpan={4} className="p-2 text-center border-r border-slate-200 bg-sky-50/20 text-[#003366]">PLANTA GENERAL (Desglose de Áreas)</th>
-                  <th colSpan={3} className="p-2 text-center bg-orange-50/15 text-orange-700">LOGÍSTICA EXTERNA</th>
+                  <th colSpan={4} className="p-2 text-center bg-orange-50/15 text-orange-700">LOGÍSTICA EXTERNA</th>
                   <th className="p-2 text-center">Estado</th>
                 </tr>
               )}
@@ -292,13 +292,14 @@ export default function Stock({ stocks, userRole, currentUser }: StockProps) {
                     Salidas
                   </th>
                   {/* Planta breakdown detailed columns */}
-                  <th className="p-2.5 text-center font-extrabold text-[#003366] bg-[#003366]/5">STOCK GENERAL PLANTA</th>
-                  <th className="p-2.5 text-center font-medium text-slate-500">STOCK DISPONIBLE PLANTA</th>
-                  <th className="p-2.5 text-center font-medium text-slate-500">STOCK PRODUCCION</th>
-                  <th className="p-2.5 text-center font-medium text-slate-500 border-r border-slate-200">STOCK ALMACEN PLANTA</th>
+                  <th className="p-2.5 text-center font-extrabold text-[#003366] bg-[#003366]/5">GLOBAL DE STOCK</th>
+                  <th className="p-2.5 text-center font-medium text-slate-500">STOCK ACTIVOS LOGÍSTICOS</th>
+                  <th className="p-2.5 text-center font-medium text-slate-500">STOCK PRODUCCIÓN</th>
+                  <th className="p-2.5 text-center font-medium text-slate-500 border-r border-slate-200">STOCK ALMACÉN PT</th>
                   {/* Logistics columns */}
                   <th className="p-2.5 text-center text-sky-700 font-bold bg-sky-50/10">Tránsito</th>
                   <th className="p-2.5 text-center text-blue-700 font-bold bg-blue-50/10">Clientes</th>
+                  <th className="p-2.5 text-center text-orange-700 font-bold bg-orange-50/10">Prestado/Pendiente</th>
                   <th className="p-2.5 text-center text-red-600 font-bold bg-red-50/10 border-r border-slate-200">Dañados/Reparar</th>
                   <th className="p-2.5 text-center">Estado</th>
                 </tr>
@@ -307,7 +308,7 @@ export default function Stock({ stocks, userRole, currentUser }: StockProps) {
             <tbody className="divide-y divide-slate-150 text-[11px]">
               {filteredStocks.length === 0 ? (
                 <tr>
-                  <td colSpan={isRestricted ? 4 : 12} className="p-8 text-center text-slate-400">
+                  <td colSpan={isRestricted ? 4 : 13} className="p-8 text-center text-slate-400">
                     <Layers className="w-6 h-6 mx-auto opacity-30 mb-1.5" />
                     <span>No hay resultados que coincidan con los filtros</span>
                   </td>
@@ -367,13 +368,16 @@ export default function Stock({ stocks, userRole, currentUser }: StockProps) {
 
                       {/* Logistics columns */}
                       <td className="p-2.5 text-center font-mono text-sky-700 font-bold bg-sky-50/10">
-                        {s.breakdown.reparto} u.
+                        {s.breakdown.reparto || 0} u.
                       </td>
                       <td className="p-2.5 text-center font-mono text-blue-700 font-bold bg-blue-50/10">
-                        {s.breakdown.clientes} u.
+                        {s.breakdown.clientes || 0} u.
+                      </td>
+                      <td className="p-2.5 text-center font-mono text-orange-700 font-bold bg-orange-50/10">
+                        {(s.breakdown.reparto || 0) + (s.breakdown.clientes || 0)} u.
                       </td>
                       <td className="p-2.5 text-center font-mono text-red-600 font-bold bg-red-50/10 border-r border-slate-200">
-                        {s.breakdown.danado + s.breakdown.reparacion} u.
+                        {(s.breakdown.danado || 0) + (s.breakdown.reparacion || 0)} u.
                       </td>
 
                       {/* Status */}

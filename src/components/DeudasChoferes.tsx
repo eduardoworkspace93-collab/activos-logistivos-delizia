@@ -6,6 +6,60 @@ import {
   Printer, ArrowUpRight, ArrowDownLeft, Filter, Scale, RefreshCw, X
 } from 'lucide-react';
 
+function isInternalArea(name: string): boolean {
+  const norm = (name || '').trim().toUpperCase();
+  if (!norm || norm === '-' || norm === 'S/N') return true;
+  
+  // Checks for Producción
+  if (
+    norm === 'PRODUCCION' || 
+    norm === 'PRODUCCIÓN' || 
+    norm === 'EN PRODUCCION' || 
+    norm === 'EN PRODUCCIÓN' || 
+    norm.includes('AREA DE PRODUCCION') || 
+    norm.includes('ÁREA DE PRODUCCIÓN')
+  ) {
+    return true;
+  }
+  // Checks for Almacén
+  if (
+    norm === 'ALMACEN' || 
+    norm === 'ALMACÉN' || 
+    norm === 'ALMACEN PLANTA' || 
+    norm === 'ALMACÉN PLANTA' || 
+    norm === 'ALMACEN DE PRODUCTO TERMINADO' || 
+    norm === 'ALMACÉN DE PRODUCTO TERMINADO' || 
+    norm.includes('ALMACEN PLANTA') || 
+    norm.includes('ALMACÉN PLANTA') ||
+    norm.includes('ALMACEN DE PRODUCTO TERMINADO') ||
+    norm.includes('ALMACÉN DE PRODUCTO TERMINADO')
+  ) {
+    return true;
+  }
+  // Checks for Planta/Activos Logísticos
+  if (
+    norm === 'PLANTA' || 
+    norm === 'PLANTA GENERAL' || 
+    norm === 'PLANTA CENTRAL' || 
+    norm === 'PLANTA CENTRAL EL ALTO' || 
+    norm === 'PLANTA EL ALTO' || 
+    norm === 'ACTIVOS LOGÍSTICOS' || 
+    norm === 'ACTIVOS LOGISTICOS' || 
+    norm.includes('LOGISTICOS') || 
+    norm.includes('LOGÍSTICOS')
+  ) {
+    return true;
+  }
+  
+  return false;
+}
+
+function isInternalStatus(status: string): boolean {
+  if (!status) return false;
+  return ['Planta_Disponibles', 'Produccion', 'Planta_Almacen'].includes(status);
+}
+
+
 interface DeudasChoferesProps {
   movements: Movement[];
   items: Item[];
@@ -71,13 +125,7 @@ export default function DeudasChoferes({
       locations.forEach(loc => {
         if (loc.type === 'destino') {
           const nameRaw = (loc.name || '').trim();
-          if (nameRaw && nameRaw !== '-' && 
-              nameRaw.toUpperCase() !== 'PLANTA GENERAL' && 
-              nameRaw.toUpperCase() !== 'PLANTA CENTRAL' && 
-              nameRaw.toUpperCase() !== 'PLANTA' && 
-              nameRaw.toUpperCase() !== 'PRODUCCION' && 
-              nameRaw.toUpperCase() !== 'ALMACEN PLANTA' && 
-              nameRaw.toUpperCase() !== 'ALMACEN') {
+          if (nameRaw && nameRaw !== '-' && !isInternalArea(nameRaw)) {
             const key = nameRaw.toUpperCase();
             if (!jefes[key]) {
               jefes[key] = {
@@ -96,13 +144,7 @@ export default function DeudasChoferes({
     if (driversRoutes) {
       driversRoutes.forEach(dr => {
         const nameRaw = (dr.jefeName || '').trim();
-        if (nameRaw && nameRaw !== '-' && 
-            nameRaw.toUpperCase() !== 'PLANTA GENERAL' && 
-            nameRaw.toUpperCase() !== 'PLANTA CENTRAL' && 
-            nameRaw.toUpperCase() !== 'PLANTA' && 
-            nameRaw.toUpperCase() !== 'PRODUCCION' && 
-            nameRaw.toUpperCase() !== 'ALMACEN PLANTA' && 
-            nameRaw.toUpperCase() !== 'ALMACEN') {
+        if (nameRaw && nameRaw !== '-' && !isInternalArea(nameRaw)) {
           const key = nameRaw.toUpperCase();
           if (!jefes[key]) {
             jefes[key] = {
@@ -131,8 +173,14 @@ export default function DeudasChoferes({
     movements.forEach(m => {
       const jefeRaw = (m.entity || '').trim();
 
-      // Filter out empty/placeholder records or internal plant categories
-      if (!jefeRaw || jefeRaw === '-' || jefeRaw.toUpperCase() === 'PLANTA GENERAL' || jefeRaw.toUpperCase() === 'PLANTA CENTRAL' || jefeRaw.toUpperCase() === 'PLANTA' || jefeRaw.toUpperCase() === 'PRODUCCION' || jefeRaw.toUpperCase() === 'ALMACEN PLANTA' || jefeRaw.toUpperCase() === 'ALMACEN') {
+      // Filter out empty/placeholder records, internal plant categories, or internal transfers
+      if (!jefeRaw || jefeRaw === '-' || isInternalArea(jefeRaw)) {
+        return;
+      }
+
+      const fromInt = m.fromStatus ? isInternalStatus(m.fromStatus) : false;
+      const destInt = m.crateStatus ? isInternalStatus(m.crateStatus) : false;
+      if (fromInt && destInt) {
         return;
       }
 

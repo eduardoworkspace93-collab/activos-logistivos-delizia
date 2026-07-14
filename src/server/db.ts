@@ -370,6 +370,7 @@ export class LocalDatabase {
           ...defaultDb,
           ...loadedData
         };
+        this.ensureDefaultOperationalAreas();
         // Save locally to keep in sync
         try {
           fs.writeFileSync(DB_FILE_PATH, JSON.stringify(this.db, null, 2), 'utf8');
@@ -486,15 +487,164 @@ export class LocalDatabase {
         if (usersUpdated) {
           this.save();
         }
+        this.ensureDefaultOperationalAreas();
         console.log('Database loaded successfully from', DB_FILE_PATH);
       } else {
         this.db = defaultDb;
+        this.ensureDefaultOperationalAreas();
         this.save();
         console.log('Database file not found, initialized with default values.');
       }
     } catch (e) {
       console.error('Error loading database, using default values', e);
       this.db = defaultDb;
+      this.ensureDefaultOperationalAreas();
+    }
+  }
+
+  private ensureDefaultOperationalAreas() {
+    if (!this.db.operationalAreas) {
+      this.db.operationalAreas = [];
+    }
+    
+    const defaults = [
+      { id: 'Planta_Disponibles', name: 'ACTIVOS LOGÍSTICOS', color: '#0b4a9b' },
+      { id: 'Produccion', name: 'PRODUCCIÓN', color: '#f15a24' },
+      { id: 'Planta_Almacen', name: 'ALMACÉN DE PRODUCTO TERMINADO', color: '#10b981' },
+      { id: 'Reparto', name: 'En Reparto (Distribución)', color: '#6366f1' },
+      { id: 'Clientes', name: 'En Clientes (Mercado)', color: '#f43f5e' },
+      { id: 'Pendiente', name: 'Pendiente Retorno (Choferes)', color: '#8b5cf6' },
+      { id: 'Dañado', name: 'Dañado (Merma)', color: '#ef4444' },
+      { id: 'Reparación', name: 'En Reparación', color: '#6b7280' }
+    ];
+
+    let changed = false;
+    defaults.forEach(def => {
+      const existingById = this.db.operationalAreas.find((a: any) => a.id === def.id);
+      if (!existingById) {
+        // Double check: if there is an area with the exact same name but a different (random) ID, migrate its ID to the standard ID
+        const existingByName = this.db.operationalAreas.find((a: any) => 
+          a.name.trim().toUpperCase() === def.name.toUpperCase() || 
+          (a.name.trim().toUpperCase() === 'PLANTA_DISPONIBLES' && def.id === 'Planta_Disponibles')
+        );
+        if (existingByName) {
+          existingByName.id = def.id;
+          existingByName.name = def.name;
+          existingByName.color = def.color;
+        } else {
+          this.db.operationalAreas.push(def);
+        }
+        changed = true;
+      } else {
+        if (existingById.name !== def.name) {
+          existingById.name = def.name;
+          changed = true;
+        }
+      }
+    });
+
+    // Also, remove duplicates
+    const uniqueAreas: any[] = [];
+    const seenNames = new Set<string>();
+    const seenIds = new Set<string>();
+
+    this.db.operationalAreas.forEach((area: any) => {
+      const normalizedName = area.name.trim().toUpperCase();
+      if (!seenIds.has(area.id)) {
+        const isStandard = defaults.some(d => d.id === area.id);
+        if (isStandard) {
+          uniqueAreas.push(area);
+          seenNames.add(normalizedName);
+          seenIds.add(area.id);
+        } else if (!seenNames.has(normalizedName)) {
+          uniqueAreas.push(area);
+          seenNames.add(normalizedName);
+          seenIds.add(area.id);
+        } else {
+          changed = true;
+        }
+      } else {
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      this.db.operationalAreas = uniqueAreas;
+      this.save();
+    }
+
+    this.migrateLegacyMovements();
+  }
+
+  private migrateLegacyMovements() {
+    let changed = false;
+    if (this.db.movements && Array.isArray(this.db.movements)) {
+      this.db.movements.forEach(m => {
+        const entityName = (m.entity || '').trim().toUpperCase();
+        
+        // Let's check if it matches PRODUCCION
+        if (entityName.includes('PRODUCCION') || entityName.includes('PRODUCCIÓN')) {
+          if (m.crateStatus !== 'Produccion') {
+            m.crateStatus = 'Produccion' as any;
+            changed = true;
+          }
+          if (!m.fromStatus) {
+            m.fromStatus = 'Planta_Disponibles';
+            changed = true;
+          }
+        }
+        
+        // Let's check if it matches ALMACEN DE PRODUCTO TERMINADO
+        if (entityName.includes('ALMACEN') || entityName.includes('ALMACÉN') || entityName.includes('TERMINADO')) {
+          if (m.crateStatus !== 'Planta_Almacen') {
+            m.crateStatus = 'Planta_Almacen' as any;
+            changed = true;
+          }
+          if (!m.fromStatus) {
+            // If registered by OPP, it likely came from Produccion
+            if (m.user === 'opp') {
+              m.fromStatus = 'Produccion';
+            } else {
+              m.fromStatus = 'Planta_Disponibles';
+            }
+            changed = true;
+          }
+        }
+      });
+    }
+
+    if (this.db.kardex && Array.isArray(this.db.kardex)) {
+      this.db.kardex.forEach(k => {
+        const entityName = (k.entity || '').trim().toUpperCase();
+        if (entityName.includes('PRODUCCION') || entityName.includes('PRODUCCIÓN')) {
+          if (k.crateStatus !== 'Produccion') {
+            k.crateStatus = 'Produccion';
+            changed = true;
+          }
+          if (!k.fromStatus) {
+            k.fromStatus = 'Planta_Disponibles';
+            changed = true;
+          }
+        }
+        if (entityName.includes('ALMACEN') || entityName.includes('ALMACÉN') || entityName.includes('TERMINADO')) {
+          if (k.crateStatus !== 'Planta_Almacen') {
+            k.crateStatus = 'Planta_Almacen';
+            changed = true;
+          }
+          if (!k.fromStatus) {
+            if (k.user === 'opp') {
+              k.fromStatus = 'Produccion';
+            } else {
+              k.fromStatus = 'Planta_Disponibles';
+            }
+            changed = true;
+          }
+        }
+      });
+    }
+
+    if (changed) {
+      this.save();
     }
   }
 
@@ -567,8 +717,12 @@ export class LocalDatabase {
         .filter(m => m.type === 'ingreso')
         .reduce((sum, m) => sum + m.quantity, 0);
 
+      const isInternalStatus = (status: string) => {
+        return ['Planta', 'Planta_Disponibles', 'Produccion', 'Planta_Almacen'].includes(status);
+      };
+
       const totalSalidas = itemMovements
-        .filter(m => m.type === 'salida')
+        .filter(m => m.type === 'salida' && !isInternalStatus(m.crateStatus || 'Planta_Disponibles'))
         .reduce((sum, m) => sum + m.quantity, 0);
 
       const stockActual = totalIngresos - totalSalidas;
@@ -583,15 +737,37 @@ export class LocalDatabase {
       let danado = 0;
       let reparacion = 0;
 
+      const customAreaStocks: Record<string, number> = {};
+
       const isInternalEntity = (entityName: string) => {
         const name = (entityName || '').trim().toUpperCase();
-        return !name || name === 'PLANTA GENERAL' || name === 'PLANTA CENTRAL' || name === 'PLANTA' || name === 'PRODUCCION' || name === 'ALMACEN PLANTA' || name === 'ALMACEN';
+        if (!name || name === '-' || name === 'S/N') return true;
+        if (
+          name.includes('PLANTA') || 
+          name.includes('PRODUCCION') || 
+          name.includes('PRODUCCIÓN') || 
+          name.includes('ALMACEN') || 
+          name.includes('ALMACÉN') || 
+          name.includes('ACTIVOS LOGISTICOS') || 
+          name.includes('ACTIVOS LOGÍSTICOS') || 
+          name.includes('LOGISTICOS') || 
+          name.includes('LOGÍSTICOS')
+        ) {
+          return true;
+        }
+        return false;
       };
 
       itemMovements.forEach(m => {
         const qty = Number(m.quantity) || 0;
         const status = m.crateStatus || 'Planta_Disponibles';
         const fromStatus = (m as any).fromStatus;
+
+        const alterCustomStock = (statusId: string, amount: number) => {
+          if (statusId) {
+            customAreaStocks[statusId] = (customAreaStocks[statusId] || 0) + amount;
+          }
+        };
 
         if (fromStatus) {
           // Decrement fromStatus
@@ -611,6 +787,8 @@ export class LocalDatabase {
             danado -= qty;
           } else if (fromStatus === 'Reparación') {
             reparacion -= qty;
+          } else {
+            alterCustomStock(fromStatus, -qty);
           }
 
           // Increment status (toStatus)
@@ -630,6 +808,8 @@ export class LocalDatabase {
             danado += qty;
           } else if (status === 'Reparación') {
             reparacion += qty;
+          } else {
+            alterCustomStock(status, qty);
           }
         } else {
           if (m.type === 'ingreso') {
@@ -650,6 +830,8 @@ export class LocalDatabase {
               danado += qty;
             } else if (status === 'Reparación') {
               reparacion += qty;
+            } else {
+              alterCustomStock(status, qty);
             }
 
             // If it is a return from outside, it must decrease the outside category
@@ -681,6 +863,8 @@ export class LocalDatabase {
               danado += qty;
             } else if (status === 'Reparación') {
               reparacion += qty;
+            } else {
+              alterCustomStock(status, qty);
             }
           }
         }
@@ -707,7 +891,8 @@ export class LocalDatabase {
           clientes: Math.max(0, clientes),
           pendientes: Math.max(0, pendientes),
           danado: Math.max(0, danado),
-          reparacion: Math.max(0, reparacion)
+          reparacion: Math.max(0, reparacion),
+          ...customAreaStocks
         }
       };
     });

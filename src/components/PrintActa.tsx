@@ -109,6 +109,14 @@ export default function PrintActa({ movement, config, onClose }: PrintActaProps)
                     </span>
                   </span>
                 ) : (
+                  movement.crateStatus === 'Planta' || movement.crateStatus === 'Planta_Disponibles' ? 'ACTIVOS LOGÍSTICOS' :
+                  movement.crateStatus === 'Produccion' ? 'PRODUCCIÓN' :
+                  movement.crateStatus === 'Planta_Almacen' ? 'ALMACÉN DE PRODUCTO TERMINADO' :
+                  movement.crateStatus === 'Reparto' ? 'EN REPARTO (DISTRIBUCIÓN)' :
+                  movement.crateStatus === 'Clientes' ? 'EN CLIENTES (MERCADO)' :
+                  movement.crateStatus === 'Pendiente' ? 'PENDIENTE RETORNO' :
+                  movement.crateStatus === 'Dañado' ? 'DAÑADO (MERMA)' :
+                  movement.crateStatus === 'Reparación' ? 'EN REPARACIÓN' :
                   movement.crateStatus
                 )}
               </span>

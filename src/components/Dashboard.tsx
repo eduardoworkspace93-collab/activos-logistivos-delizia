@@ -17,6 +17,7 @@ interface DashboardProps {
   onNavigateToMovements: (type: 'ingreso' | 'salida') => void;
   onRegisterMovement: (movementData: any) => Promise<any>;
   currentUser?: any;
+  operationalAreas?: any;
 }
 
 const crateStatusLabels: Record<string, string> = {
@@ -39,10 +40,22 @@ export default function Dashboard({
   onRefresh, 
   onNavigateToMovements,
   onRegisterMovement,
-  currentUser
+  currentUser,
+  operationalAreas = []
 }: DashboardProps) {
   // Find largest stock and lowest stock
   const lowStockThreshold = 50;
+
+  const dynamicLabels = React.useMemo(() => {
+    const labels: Record<string, string> = {};
+    Object.assign(labels, crateStatusLabels);
+    if (operationalAreas && Array.isArray(operationalAreas)) {
+      operationalAreas.forEach(area => {
+        labels[area.id] = area.name;
+      });
+    }
+    return labels;
+  }, [operationalAreas]);
 
   // Determine if user has restricted access
   const isRestrictedOperator = currentUser?.role === 'Operador' && currentUser?.area && currentUser?.area !== 'general';
@@ -807,7 +820,7 @@ export default function Dashboard({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {/* General Planta Total */}
               <div className="bg-white p-2.5 rounded-lg border border-slate-150 text-center space-y-0.5 shadow-xs">
-                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">STOCK GENERAL PLANTA</span>
+                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">GLOBAL DE STOCK</span>
                 <span className="text-base font-black font-mono text-[#003366]">
                   {stats.logisticsBreakdown.planta}
                 </span>
@@ -1051,7 +1064,7 @@ export default function Dashboard({
                       </div>
                       {m.fromStatus && (
                         <div className="text-[8px] bg-slate-100 text-slate-600 px-1 py-0.2 rounded inline-block font-medium">
-                          🔄 Traspaso: {m.fromStatus.replace('Planta_Disponibles','ACTIVOS').replace('Produccion','PROD').replace('Planta_Almacen','ALM_PT')} ➔ {m.crateStatus.replace('Planta_Disponibles','ACTIVOS').replace('Produccion','PROD').replace('Planta_Almacen','ALM_PT')}
+                          🔄 Traspaso: {dynamicLabels[m.fromStatus] || m.fromStatus} ➔ {dynamicLabels[m.crateStatus] || m.crateStatus}
                         </div>
                       )}
                     </div>

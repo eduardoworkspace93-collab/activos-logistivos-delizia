@@ -5,9 +5,9 @@ import { exportToCSV, formatDate, formatTime } from '../utils.js';
 
 const statusLabels: Record<string, string> = {
   Planta: 'Planta (General)',
-  Planta_Disponibles: 'DISPONIBLES PLANTA',
-  Produccion: 'PRODUCCION',
-  Planta_Almacen: 'ALMACEN PLANTA',
+  Planta_Disponibles: 'ACTIVOS LOGÍSTICOS',
+  Produccion: 'PRODUCCIÓN',
+  Planta_Almacen: 'ALMACÉN DE PRODUCTO TERMINADO',
   Reparto: 'En Reparto',
   Clientes: 'En Clientes',
   Pendiente: 'Pendiente Retorno',
@@ -19,14 +19,26 @@ interface KardexProps {
   kardex: KardexEntry[];
   items: Item[];
   onRefresh: () => void;
+  operationalAreas?: any[];
 }
 
-export default function Kardex({ kardex, items, onRefresh }: KardexProps) {
+export default function Kardex({ kardex, items, onRefresh, operationalAreas = [] }: KardexProps) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedItemCode, setSelectedItemCode] = useState('');
   const [selectedType, setSelectedType] = useState<'Todos' | 'ingreso' | 'salida'>('Todos');
   const [selectedUser, setSelectedUser] = useState('');
+
+  const dynamicLabels = React.useMemo(() => {
+    const labels: Record<string, string> = {};
+    Object.assign(labels, statusLabels);
+    if (operationalAreas && Array.isArray(operationalAreas)) {
+      operationalAreas.forEach(area => {
+        labels[area.id] = area.name;
+      });
+    }
+    return labels;
+  }, [operationalAreas]);
 
   // Extract unique users for filtering
   const operators = Array.from(new Set(kardex.map(k => k.user)));
@@ -271,8 +283,8 @@ export default function Kardex({ kardex, items, onRefresh }: KardexProps) {
                         <span className="font-bold text-slate-800 uppercase block">{k.entity || '-'}</span>
                         {k.crateStatus && (
                           <span className="text-[9px] text-slate-400 font-bold tracking-wider block mt-0.5">
-                            {k.fromStatus ? `${statusLabels[k.fromStatus] || k.fromStatus} ➔ ` : ''}
-                            {statusLabels[k.crateStatus] || k.crateStatus}
+                            {k.fromStatus ? `${dynamicLabels[k.fromStatus] || k.fromStatus} ➔ ` : ''}
+                            {dynamicLabels[k.crateStatus] || k.crateStatus}
                           </span>
                         )}
                       </div>

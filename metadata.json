@@ -1,5 +1,5 @@
 {
-  "name": "DELIZIA - Control de Canastillos",
+  "name": "AF logistico Del",
   "description": "Sistema de Control y Trazabilidad de Canastillos Retornables",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

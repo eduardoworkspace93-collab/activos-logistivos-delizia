@@ -16,13 +16,15 @@ interface MovimientosProps {
   onPrefillUsed?: () => void;
   driversRoutes?: DriverRoute[];
   currentUser?: any;
+  operationalAreas?: any;
+  onSaveOperationalArea?: (area: any) => Promise<void>;
 }
 
 const crateStatusLabels: Record<string, string> = {
   Planta: 'Planta (General)',
-  Planta_Disponibles: 'DISPONIBLES PLANTA',
-  Produccion: 'PRODUCCION',
-  Planta_Almacen: 'ALMACEN PLANTA',
+  Planta_Disponibles: 'ACTIVOS LOGÍSTICOS',
+  Produccion: 'PRODUCCIÓN',
+  Planta_Almacen: 'ALMACÉN DE PRODUCTO TERMINADO',
   Reparto: 'En Reparto',
   Clientes: 'En Clientes',
   Pendiente: 'Pendiente Retorno',
@@ -43,8 +45,17 @@ export default function Movimientos({
   prefill,
   onPrefillUsed,
   currentUser,
-  driversRoutes = []
+  driversRoutes = [],
+  operationalAreas = [],
+  onSaveOperationalArea
 }: MovimientosProps) {
+  // Flag to hide/show "Estado de Destino" field in the form.
+  // Set to true to reactivate it later.
+  const showCrateStatusField = false;
+  // Flag to hide/show "Área Origen (Traspaso)" field in the form.
+  // Set to true to reactivate it later.
+  const showFromStatusField = false;
+
   const [activeTab, setActiveTab] = useState<'registro' | 'historial'>('registro');
   const [type, setType] = useState<'ingreso' | 'salida'>(initialType);
   const [itemId, setItemId] = useState('');
@@ -59,8 +70,18 @@ export default function Movimientos({
   const [truckDriver, setTruckDriver] = useState('');
   const [truckRoute, setTruckRoute] = useState('');
   const [clientName, setClientName] = useState('');
-  const [crateStatus, setCrateStatus] = useState<any>('Planta_Disponibles');
+  const [crateStatus, setCrateStatus] = useState<string>('');
   const [fromStatus, setFromStatus] = useState<string>('');
+
+  const dynamicLabels = React.useMemo(() => {
+    const labels: Record<string, string> = {};
+    if (operationalAreas && Array.isArray(operationalAreas)) {
+      operationalAreas.forEach(area => {
+        labels[area.id] = area.name;
+      });
+    }
+    return labels;
+  }, [operationalAreas]);
 
   const isRestrictedOperator = (currentUser?.role === 'Operador' || currentUser?.role === 'OPC' || currentUser?.role === 'OPP' || currentUser?.role === 'OPA') && currentUser?.area && currentUser?.area !== 'general';
   
@@ -73,18 +94,32 @@ export default function Movimientos({
   const restrictedStatus = isRestrictedOperator ? (areaToStatusMap[currentUser.area] || '') : '';
 
   // Clear draft items and sync default status on type change
+  const getDefaultStatus = (typeValue: 'ingreso' | 'salida') => {
+    if (isRestrictedOperator && restrictedStatus) {
+      return dynamicLabels[restrictedStatus] || restrictedStatus;
+    }
+    if (typeValue === 'ingreso') {
+      const match = operationalAreas.find((a: any) => a.id === 'Planta_Disponibles' || a.name.toUpperCase().includes('DISPONIBLES'));
+      if (match) return match.name;
+    } else {
+      const match = operationalAreas.find((a: any) => a.id === 'Reparto' || a.name.toUpperCase().includes('REPARTO'));
+      if (match) return match.name;
+    }
+    return operationalAreas[0]?.name || '';
+  };
+
   const handleTypeChange = (newType: 'ingreso' | 'salida') => {
     setType(newType);
     if (isRestrictedOperator && restrictedStatus) {
       if (newType === 'ingreso') {
-        setCrateStatus(restrictedStatus);
+        setCrateStatus(dynamicLabels[restrictedStatus] || restrictedStatus);
         setFromStatus('');
       } else {
-        setFromStatus(restrictedStatus);
-        setCrateStatus('Planta_Disponibles');
+        setFromStatus(dynamicLabels[restrictedStatus] || restrictedStatus);
+        setCrateStatus(getDefaultStatus('salida'));
       }
     } else {
-      setCrateStatus(newType === 'ingreso' ? 'Planta_Disponibles' : 'Reparto');
+      setCrateStatus(getDefaultStatus(newType));
       setFromStatus('');
     }
     setDocumentItems([]);
@@ -118,32 +153,32 @@ export default function Movimientos({
     setType(initialType);
     if (isRestrictedOperator && restrictedStatus) {
       if (initialType === 'ingreso') {
-        setCrateStatus(restrictedStatus);
+        setCrateStatus(dynamicLabels[restrictedStatus] || restrictedStatus);
         setFromStatus('');
       } else {
-        setFromStatus(restrictedStatus);
-        setCrateStatus('Planta_Disponibles');
+        setFromStatus(dynamicLabels[restrictedStatus] || restrictedStatus);
+        setCrateStatus(getDefaultStatus('salida'));
       }
     } else {
-      setCrateStatus(initialType === 'ingreso' ? 'Planta_Disponibles' : 'Reparto');
+      setCrateStatus(getDefaultStatus(initialType));
       setFromStatus('');
     }
     setDocumentItems([]);
     setActiveTab('registro');
-  }, [initialType, isRestrictedOperator, restrictedStatus]);
+  }, [initialType, isRestrictedOperator, restrictedStatus, operationalAreas]);
 
   // Sync state initially when user area updates
   useEffect(() => {
     if (isRestrictedOperator && restrictedStatus) {
       if (type === 'ingreso') {
-        setCrateStatus(restrictedStatus);
+        setCrateStatus(dynamicLabels[restrictedStatus] || restrictedStatus);
         setFromStatus('');
       } else {
-        setFromStatus(restrictedStatus);
-        setCrateStatus('Planta_Disponibles');
+        setFromStatus(dynamicLabels[restrictedStatus] || restrictedStatus);
+        setCrateStatus(getDefaultStatus('salida'));
       }
     }
-  }, [isRestrictedOperator, restrictedStatus, currentUser]);
+  }, [isRestrictedOperator, restrictedStatus, currentUser, operationalAreas]);
 
   // Handle prefill parameters from the Deudas de Choferes screen
   useEffect(() => {
@@ -228,7 +263,7 @@ export default function Movimientos({
     return list.filter(dr => dr.driverName.toLowerCase().includes(search));
   }, [driversRoutes, entity, truckDriver]);
 
-  const handleAddDraftItem = () => {
+  const handleAddDraftItem = async () => {
     setFormError('');
     setSuccessMsg('');
     if (!itemId) {
@@ -246,26 +281,89 @@ export default function Movimientos({
       return;
     }
 
+    // Determine finalFromStatus and finalCrateStatus based on user role and entity
+    let finalFromStatus = '';
+    let finalCrateStatus = '';
+
+    const mapEntityToAreaId = (entityName: string): string | null => {
+      const name = (entityName || '').trim().toUpperCase();
+      if (!name) return null;
+      if (name.includes('PRODUCCION') || name.includes('PRODUCCIÓN')) {
+        return 'Produccion';
+      }
+      if (name.includes('ALMACEN') || name.includes('ALMACÉN') || name.includes('TERMINADO')) {
+        return 'Planta_Almacen';
+      }
+      if (name.includes('ACTIVOS') || name.includes('LOGISTICOS') || name.includes('LOGÍSTICOS') || name.includes('DISPONIBLES') || name.includes('DISPONIBLE')) {
+        return 'Planta_Disponibles';
+      }
+      return null;
+    };
+
+    const mappedEntityArea = mapEntityToAreaId(entity);
+
+    if (isRestrictedOperator && restrictedStatus) {
+      if (type === 'ingreso') {
+        // Enters restricted area
+        finalCrateStatus = restrictedStatus;
+        // Origin is the mapped entity area, or empty if external
+        finalFromStatus = mappedEntityArea || '';
+      } else {
+        // Leaves restricted area
+        finalFromStatus = restrictedStatus;
+        // Destination is mapped entity area, or a default external status based on entity
+        if (mappedEntityArea) {
+          finalCrateStatus = mappedEntityArea;
+        } else {
+          const cleanEnt = entity.trim().toUpperCase();
+          if (cleanEnt.includes('REPARTO') || truckDriver || truckPlate) {
+            finalCrateStatus = 'Reparto';
+          } else if (cleanEnt.includes('CLIENTE') || cleanEnt.includes('MERCADO')) {
+            finalCrateStatus = 'Clientes';
+          } else if (cleanEnt.includes('DAÑADO') || cleanEnt.includes('MERMA')) {
+            finalCrateStatus = 'Dañado';
+          } else if (cleanEnt.includes('REPARACION') || cleanEnt.includes('REPARACIÓN')) {
+            finalCrateStatus = 'Reparación';
+          } else {
+            finalCrateStatus = 'Reparto';
+          }
+        }
+      }
+    } else {
+      // Unrestricted operators (Admin / Supervisor)
+      if (type === 'ingreso') {
+        finalCrateStatus = mappedEntityArea || 'Planta_Disponibles';
+        finalFromStatus = '';
+      } else {
+        finalFromStatus = 'Planta_Disponibles';
+        if (mappedEntityArea) {
+          finalCrateStatus = mappedEntityArea;
+        } else {
+          const cleanEnt = entity.trim().toUpperCase();
+          if (cleanEnt.includes('REPARTO') || truckDriver || truckPlate) {
+            finalCrateStatus = 'Reparto';
+          } else if (cleanEnt.includes('CLIENTE') || cleanEnt.includes('MERCADO')) {
+            finalCrateStatus = 'Clientes';
+          } else {
+            finalCrateStatus = 'Reparto';
+          }
+        }
+      }
+    }
+
     // Check stock if it's a 'salida' or a transfer
     const alreadyAddedQty = documentItems
-      .filter(di => di.itemId === itemId && di.fromStatus === fromStatus)
+      .filter(di => di.itemId === itemId && di.fromStatus === finalFromStatus)
       .reduce((sum, di) => sum + di.quantity, 0);
     
     const totalRequestedQty = alreadyAddedQty + Number(quantity);
 
-    if (fromStatus) {
-      const fromStatusKey = fromStatus === 'Planta' ? 'plantaDisponibles' : 
-                          fromStatus === 'Planta_Disponibles' ? 'plantaDisponibles' : 
-                          fromStatus === 'Produccion' ? 'produccion' : 
-                          fromStatus === 'Planta_Almacen' ? 'plantaAlmacen' : 
-                          fromStatus === 'Reparto' ? 'reparto' : 
-                          fromStatus === 'Clientes' ? 'clientes' : 
-                          fromStatus === 'Pendiente' ? 'pendientes' : 
-                          fromStatus === 'Dañado' ? 'danado' : 'reparacion';
-      const availableInFromStatus = selectedStockInfo ? (selectedStockInfo.breakdown[fromStatusKey as any] || 0) : 0;
+    if (finalFromStatus) {
+      const availableInFromStatus = selectedStockInfo ? (selectedStockInfo.breakdown[finalFromStatus] || selectedStockInfo.breakdown[finalFromStatus === 'Planta_Disponibles' ? 'plantaDisponibles' : finalFromStatus === 'Produccion' ? 'produccion' : finalFromStatus === 'Planta_Almacen' ? 'plantaAlmacen' : ''] || 0) : 0;
       
       if (totalRequestedQty > availableInFromStatus) {
-        setFormError(`Stock insuficiente en el área de origen para "${selectedItem.name}". Stock disponible en ${crateStatusLabels[fromStatus] || fromStatus}: ${availableInFromStatus}. Ya has agregado ${alreadyAddedQty} a la lista, e intentas agregar ${quantity} más.`);
+        const areaLabel = dynamicLabels[finalFromStatus] || finalFromStatus;
+        setFormError(`Stock insuficiente en el área de origen para "${selectedItem.name}". Stock disponible en ${areaLabel}: ${availableInFromStatus}. Ya has agregado ${alreadyAddedQty} a la lista, e intentas agregar ${quantity} más.`);
         return;
       }
     } else if (type === 'salida') {
@@ -277,7 +375,7 @@ export default function Movimientos({
 
     // Add to list or update quantity if same itemId, crateStatus, and fromStatus
     const existingIndex = documentItems.findIndex(
-      di => di.itemId === itemId && di.crateStatus === crateStatus && di.fromStatus === fromStatus
+      di => di.itemId === itemId && di.crateStatus === finalCrateStatus && di.fromStatus === finalFromStatus
     );
 
     if (existingIndex > -1) {
@@ -290,8 +388,8 @@ export default function Movimientos({
         {
           itemId,
           quantity: Number(quantity),
-          crateStatus,
-          fromStatus: fromStatus || undefined,
+          crateStatus: finalCrateStatus,
+          fromStatus: finalFromStatus || undefined,
           itemName: selectedItem.name,
           itemCode: selectedItem.code
         }
@@ -302,6 +400,7 @@ export default function Movimientos({
     setItemId('');
     setQuantity('');
     setFromStatus('');
+    setCrateStatus(getDefaultStatus(type));
   };
 
   const handleRemoveDraftItem = (index: number) => {
@@ -374,7 +473,8 @@ export default function Movimientos({
       setTruckDriver('');
       setTruckRoute('');
       setClientName('');
-      setCrateStatus(type === 'ingreso' ? 'Planta_Disponibles' : 'Reparto');
+      setCrateStatus(getDefaultStatus(type));
+      setFromStatus('');
 
       // Scroll to top of panel to see message
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -648,7 +748,10 @@ export default function Movimientos({
                 </div>
 
                 {/* Adder Inputs Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                <div className={`grid grid-cols-1 ${
+                  (showCrateStatusField && showFromStatusField) ? 'sm:grid-cols-5' :
+                  (showCrateStatusField || showFromStatusField) ? 'sm:grid-cols-4' : 'sm:grid-cols-3'
+                } gap-3`}>
                   <div className="sm:col-span-2">
                     <label className="block text-[10px] font-bold text-slate-600 mb-1">Tipo de Canastillo</label>
                     <select
@@ -665,64 +768,57 @@ export default function Movimientos({
                     </select>
                   </div>
 
-                   <div>
-                    <label className="block text-[10px] font-bold text-[#003366] mb-1">
-                      Área Origen (Traspaso) {type === 'salida' && isRestrictedOperator && '🔒'}
-                    </label>
-                    <select
-                      value={fromStatus}
-                      disabled={type === 'salida' && isRestrictedOperator}
-                      onChange={e => setFromStatus(e.target.value)}
-                      className={`w-full border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#003366]/20 font-bold ${
-                        type === 'salida' && isRestrictedOperator 
-                          ? 'bg-slate-100/80 text-slate-500 cursor-not-allowed' 
-                          : 'bg-slate-50 focus:bg-white text-slate-800'
-                      }`}
-                    >
-                      {type === 'salida' && isRestrictedOperator ? (
-                        <option value={restrictedStatus}>
-                          {crateStatusLabels[restrictedStatus]}
-                        </option>
-                      ) : (
-                        <>
-                          <option value="">-- Externo / Nuevo Stock --</option>
-                          {Object.entries(crateStatusLabels).map(([key, label]) => (
-                            <option key={key} value={key}>
-                              {label}
-                            </option>
-                          ))}
-                        </>
-                      )}
-                    </select>
-                  </div>
+                  {showFromStatusField && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#003366] mb-1">
+                        Área Origen (Traspaso) {type === 'salida' && isRestrictedOperator && '🔒'}
+                      </label>
+                      <input
+                        type="text"
+                        list="fromStatusOptions"
+                        value={fromStatus}
+                        disabled={type === 'salida' && isRestrictedOperator}
+                        onChange={e => setFromStatus(e.target.value)}
+                        placeholder={type === 'salida' && isRestrictedOperator ? "" : "Escriba o seleccione un Área de Origen..."}
+                        className={`w-full border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#003366]/20 font-bold uppercase ${
+                          type === 'salida' && isRestrictedOperator 
+                            ? 'bg-slate-100/80 text-slate-500 cursor-not-allowed' 
+                            : 'bg-slate-50 focus:bg-white text-slate-800'
+                        }`}
+                      />
+                      <datalist id="fromStatusOptions">
+                        {operationalAreas.map((area: any) => (
+                          <option key={area.id} value={area.name} />
+                        ))}
+                      </datalist>
+                    </div>
+                  )}
 
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-600 mb-1">
-                      Estado de Destino {type === 'ingreso' && isRestrictedOperator && '🔒'}
-                    </label>
-                    <select
-                      value={crateStatus}
-                      disabled={type === 'ingreso' && isRestrictedOperator}
-                      onChange={e => setCrateStatus(e.target.value)}
-                      className={`w-full border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#003366]/20 font-bold ${
-                        type === 'ingreso' && isRestrictedOperator 
-                          ? 'bg-slate-100/80 text-slate-500 cursor-not-allowed' 
-                          : 'bg-slate-50 focus:bg-white text-slate-800'
-                      }`}
-                    >
-                      {type === 'ingreso' && isRestrictedOperator ? (
-                        <option value={restrictedStatus}>
-                          {crateStatusLabels[restrictedStatus]}
-                        </option>
-                      ) : (
-                        Object.entries(crateStatusLabels).map(([key, label]) => (
-                          <option key={key} value={key}>
-                            {label}
-                          </option>
-                        ))
-                      )}
-                    </select>
-                  </div>
+                  {showCrateStatusField && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                        Estado de Destino {type === 'ingreso' && isRestrictedOperator && '🔒'}
+                      </label>
+                      <input
+                        type="text"
+                        list="crateStatusOptions"
+                        value={crateStatus}
+                        disabled={type === 'ingreso' && isRestrictedOperator}
+                        onChange={e => setCrateStatus(e.target.value)}
+                        placeholder={type === 'ingreso' && isRestrictedOperator ? "" : "Escriba o seleccione un Estado de Destino..."}
+                        className={`w-full border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#003366]/20 font-bold uppercase ${
+                          type === 'ingreso' && isRestrictedOperator 
+                            ? 'bg-slate-100/80 text-slate-500 cursor-not-allowed' 
+                            : 'bg-slate-50 focus:bg-white text-slate-800'
+                        }`}
+                      />
+                      <datalist id="crateStatusOptions">
+                        {operationalAreas.map((area: any) => (
+                          <option key={area.id} value={area.name} />
+                        ))}
+                      </datalist>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-[10px] font-bold text-slate-600 mb-1">Cantidad</label>
@@ -776,11 +872,11 @@ export default function Movimientos({
                             <td className="p-2 px-3">
                               <div className="flex items-center gap-1">
                                 <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold border ${di.fromStatus ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
-                                  {di.fromStatus ? (crateStatusLabels[di.fromStatus] || di.fromStatus) : 'Ext. / Nuevo Stock'}
+                                  {di.fromStatus ? (dynamicLabels[di.fromStatus] || di.fromStatus) : 'Ext. / Nuevo Stock'}
                                 </span>
                                 <span className="text-slate-400">➔</span>
                                 <span className="text-[9px] bg-sky-50 text-[#003366] font-bold px-1.5 py-0.5 rounded border border-sky-100">
-                                  {crateStatusLabels[di.crateStatus] || di.crateStatus}
+                                  {dynamicLabels[di.crateStatus] || di.crateStatus}
                                 </span>
                               </div>
                             </td>
@@ -862,7 +958,7 @@ export default function Movimientos({
                     {/* Planta Breakdown list */}
                     <div className="pl-2 border-l-2 border-slate-150 space-y-1">
                       <div className="flex justify-between items-center text-slate-400 text-[10px]">
-                        <span>• Disponibles Planta</span>
+                        <span>• Activos Logísticos</span>
                         <span className="font-mono text-slate-700">{selectedStockInfo.breakdown.plantaDisponibles || 0}</span>
                       </div>
                       <div className="flex justify-between items-center text-slate-400 text-[10px]">
@@ -870,7 +966,7 @@ export default function Movimientos({
                         <span className="font-mono text-slate-700">{selectedStockInfo.breakdown.produccion || 0}</span>
                       </div>
                       <div className="flex justify-between items-center text-slate-400 text-[10px]">
-                        <span>• Almacén Planta</span>
+                        <span>• Almacén Producto Terminado</span>
                         <span className="font-mono text-slate-700">{selectedStockInfo.breakdown.plantaAlmacen || 0}</span>
                       </div>
                     </div>
@@ -967,8 +1063,8 @@ export default function Movimientos({
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-800 uppercase block">{m.entity}</span>
                           <span className="text-[9px] text-slate-400 font-bold tracking-wider block mt-0.5">
-                            {m.fromStatus ? `${crateStatusLabels[m.fromStatus] || m.fromStatus} ➔ ` : ''}
-                            {crateStatusLabels[m.crateStatus] || m.crateStatus}
+                            {m.fromStatus ? `${dynamicLabels[m.fromStatus] || m.fromStatus} ➔ ` : ''}
+                            {dynamicLabels[m.crateStatus] || m.crateStatus}
                           </span>
                         </div>
                       </td>

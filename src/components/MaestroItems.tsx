@@ -378,6 +378,10 @@ export default function MaestroItems({
         await onDeleteLocation(deleteConfirm.id);
       } else if (deleteConfirm.type === 'driver') {
         await onDeleteDriverRoute(deleteConfirm.id);
+      } else if (deleteConfirm.type === 'area') {
+        if (onDeleteOperationalArea) {
+          await onDeleteOperationalArea(deleteConfirm.id);
+        }
       }
       setDeleteConfirm(null);
     } catch (err: any) {
@@ -463,7 +467,7 @@ export default function MaestroItems({
         </div>
 
         {/* Global Action Button based on active tab */}
-        {!isEditingItem && !isEditingLoc && !isEditingDriverRoute && !isEditingUser && (
+        {!isEditingItem && !isEditingLoc && !isEditingDriverRoute && !isEditingUser && !isEditingArea && (
           <button
             onClick={() => {
               if (activeTab === 'items') handleAddNewItem();
@@ -471,6 +475,7 @@ export default function MaestroItems({
               else if (activeTab === 'destinos') handleAddNewLoc('destino');
               else if (activeTab === 'choferes') handleAddNewDR();
               else if (activeTab === 'usuarios') handleAddNewUser();
+              else if (activeTab === 'areas') handleAddNewArea();
             }}
             className="flex items-center gap-1.5 bg-[#003366] hover:bg-[#003366]/90 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-sm active:scale-95 whitespace-nowrap"
           >
@@ -480,6 +485,7 @@ export default function MaestroItems({
             {activeTab === 'destinos' && 'Agregar Jefe Principal / Destino'}
             {activeTab === 'choferes' && 'Agregar Conductor / Ruta'}
             {activeTab === 'usuarios' && isUserAdmin && 'Registrar Usuario'}
+            {activeTab === 'areas' && 'Agregar Área Origen/Destino'}
           </button>
         )}
       </div>
@@ -487,7 +493,7 @@ export default function MaestroItems({
       {/* Tabs Menu */}
       <div className="flex flex-wrap border-b border-slate-200 bg-white px-4 rounded-lg pt-1 shadow-xs border gap-1">
         <button
-          onClick={() => { setActiveTab('items'); setIsEditingItem(false); setIsEditingLoc(false); setIsEditingDriverRoute(false); setIsEditingUser(false); }}
+          onClick={() => { setActiveTab('items'); setIsEditingItem(false); setIsEditingLoc(false); setIsEditingDriverRoute(false); setIsEditingUser(false); setIsEditingArea(false); }}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
             activeTab === 'items'
               ? 'border-[#003366] text-[#003366]'
@@ -497,7 +503,7 @@ export default function MaestroItems({
           Ítems a Controlar
         </button>
         <button
-          onClick={() => { setActiveTab('procedencias'); setIsEditingItem(false); setIsEditingLoc(false); setIsEditingDriverRoute(false); setIsEditingUser(false); }}
+          onClick={() => { setActiveTab('procedencias'); setIsEditingItem(false); setIsEditingLoc(false); setIsEditingDriverRoute(false); setIsEditingUser(false); setIsEditingArea(false); }}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
             activeTab === 'procedencias'
               ? 'border-[#003366] text-[#003366]'
@@ -507,7 +513,7 @@ export default function MaestroItems({
           Procedencias / Orígenes
         </button>
         <button
-          onClick={() => { setActiveTab('destinos'); setIsEditingItem(false); setIsEditingLoc(false); setIsEditingDriverRoute(false); setIsEditingUser(false); }}
+          onClick={() => { setActiveTab('destinos'); setIsEditingItem(false); setIsEditingLoc(false); setIsEditingDriverRoute(false); setIsEditingUser(false); setIsEditingArea(false); }}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
             activeTab === 'destinos'
               ? 'border-[#003366] text-[#003366]'
@@ -517,7 +523,7 @@ export default function MaestroItems({
           Jefes Principales (Destinos)
         </button>
         <button
-          onClick={() => { setActiveTab('choferes'); setIsEditingItem(false); setIsEditingLoc(false); setIsEditingDriverRoute(false); setIsEditingUser(false); }}
+          onClick={() => { setActiveTab('choferes'); setIsEditingItem(false); setIsEditingLoc(false); setIsEditingDriverRoute(false); setIsEditingUser(false); setIsEditingArea(false); }}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
             activeTab === 'choferes'
               ? 'border-[#003366] text-[#003366]'
@@ -527,7 +533,7 @@ export default function MaestroItems({
           Choferes y Rutas
         </button>
         <button
-          onClick={() => { setActiveTab('usuarios'); setIsEditingItem(false); setIsEditingLoc(false); setIsEditingDriverRoute(false); setIsEditingUser(false); }}
+          onClick={() => { setActiveTab('usuarios'); setIsEditingItem(false); setIsEditingLoc(false); setIsEditingDriverRoute(false); setIsEditingUser(false); setIsEditingArea(false); }}
           className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
             activeTab === 'usuarios'
               ? 'border-[#003366] text-[#003366]'
@@ -535,6 +541,16 @@ export default function MaestroItems({
           }`}
         >
           Usuarios del Sistema
+        </button>
+        <button
+          onClick={() => { setActiveTab('areas'); setIsEditingItem(false); setIsEditingLoc(false); setIsEditingDriverRoute(false); setIsEditingUser(false); setIsEditingArea(false); }}
+          className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+            activeTab === 'areas'
+              ? 'border-[#003366] text-[#003366]'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Áreas de Origen / Destino
         </button>
       </div>
 
@@ -1141,6 +1157,151 @@ export default function MaestroItems({
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        )
+      )}
+
+      {/* TAB: AREAS */}
+      {activeTab === 'areas' && (
+        isEditingArea ? (
+          /* Operational Areas Add/Edit Form */
+          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm max-w-xl">
+            <h3 className="font-semibold text-slate-900 mb-3 text-sm font-display">
+              {editArea.id ? 'Modificar Área de Origen / Destino' : 'Registrar Nueva Área de Origen / Destino'}
+            </h3>
+
+            {areaFormError && (
+              <div className="mb-3.5 p-2 bg-red-50 text-red-600 rounded-lg text-[11px] font-medium border border-red-100">
+                {areaFormError}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmitArea} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 mb-1">Nombre de la Opción / Área *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej. NUEVA ÁREA O ESTADO"
+                  value={editArea.name}
+                  onChange={e => setEditArea({ ...editArea, name: e.target.value.toUpperCase() })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#003366]/20 text-slate-800 font-bold"
+                />
+                <span className="text-[9px] text-slate-400 mt-1 block">Este nombre aparecerá en los selectores de "Area Origen (Traspaso)" y "Estado de Destino" al registrar movimientos.</span>
+              </div>
+
+              {!editArea.id && (
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1">Identificador Único (ID) - Opcional</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Mi_Nueva_Area"
+                    value={editArea.id}
+                    onChange={e => setEditArea({ ...editArea, id: e.target.value.trim().replace(/\s+/g, '_') })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#003366]/20 text-slate-800 font-mono font-bold"
+                  />
+                  <span className="text-[9px] text-slate-400 mt-1 block">Si no se especifica, el sistema generará uno automáticamente. Se recomienda usar solo letras, números y guiones bajos.</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 mb-1">Color Distintivo</label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={editArea.color || '#0b4a9b'}
+                    onChange={e => setEditArea({ ...editArea, color: e.target.value })}
+                    className="w-10 h-10 border border-slate-200 rounded-lg p-0.5 cursor-pointer bg-white"
+                  />
+                  <input
+                    type="text"
+                    placeholder="#0b4a9b"
+                    value={editArea.color}
+                    onChange={e => setEditArea({ ...editArea, color: e.target.value })}
+                    className="w-28 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#003366]/20 text-slate-800 font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="submit"
+                  className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg font-semibold cursor-pointer active:scale-95"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  Guardar Área
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelArea}
+                  className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 px-3.5 py-1.5 rounded-lg font-semibold cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : (
+          /* Operational Areas list */
+          <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[550px]">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="p-2.5 px-4 w-12 text-center">#</th>
+                    <th className="p-2.5 px-4">Identificador (ID)</th>
+                    <th className="p-2.5 px-4">Nombre Registrado (Elegible)</th>
+                    <th className="p-2.5 px-4">Color</th>
+                    <th className="p-2.5 px-4 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-150 text-[11px]">
+                  {operationalAreas.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center text-slate-400">
+                        <Layers className="w-8 h-8 mx-auto opacity-30 mb-1.5" />
+                        <span>No hay áreas o estados de stock registrados en la base de datos</span>
+                      </td>
+                    </tr>
+                  ) : (
+                    operationalAreas.map((area, index) => (
+                      <tr key={area.id} className="hover:bg-slate-50/40">
+                        <td className="p-2.5 px-4 font-mono text-slate-400 text-center">{index + 1}</td>
+                        <td className="p-2.5 px-4 font-mono font-bold text-slate-500">{area.id}</td>
+                        <td className="p-2.5 px-4 font-semibold text-slate-800">{area.name}</td>
+                        <td className="p-2.5 px-4">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-3.5 h-3.5 rounded-full border border-slate-300 animate-pulse" style={{ backgroundColor: area.color }} />
+                            <span className="font-mono text-slate-500 text-[10px]">{area.color}</span>
+                          </div>
+                        </td>
+                        <td className="p-2.5 px-4 text-right">
+                          <div className="flex justify-end gap-1">
+                            <button
+                              onClick={() => handleEditArea(area)}
+                              className="p-1 text-slate-400 hover:text-[#003366] hover:bg-slate-100 rounded transition-all cursor-pointer"
+                              title="Editar"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            {canDelete && (
+                              <button
+                                onClick={() => handleDeleteArea(area.id, area.name)}
+                                className="p-1 text-slate-400 hover:text-red-500 hover:bg-slate-100 rounded transition-all cursor-pointer"
+                                title="Eliminar"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         )
