@@ -360,6 +360,10 @@ async function startServer() {
 
   // Clear Database completely (Reset to zero)
   app.post('/api/database/clear', checkAuth(['Administrador']), (req: any, res) => {
+    const { password } = req.body;
+    if (password !== '76259984') {
+      return res.status(403).json({ error: 'Contraseña de seguridad incorrecta.' });
+    }
     try {
       db.clearDatabase(req.user.username, getClientIp(req));
       res.json({ success: true, message: 'La base de datos se ha vaciado por completo con éxito.' });

@@ -2,12 +2,15 @@
  * Utility functions for exporting CSV, formatting, and logistical assistance.
  */
 
-// Helper to download CSV in Excel-friendly format (UTF-8 with BOM)
+// Helper to download CSV in Excel-friendly format (UTF-8 with BOM and semicolon separator)
 export function exportToCSV(data: any[], filename: string, headers: { key: string; label: string }[]) {
   const csvRows: string[] = [];
   
+  // Add separator indicator for Excel to recognize semicolon delimiter instantly
+  csvRows.push('sep=;');
+  
   // 1. Headers row
-  const headerRow = headers.map(h => `"${h.label.replace(/"/g, '""')}"`).join(',');
+  const headerRow = headers.map(h => `"${h.label.replace(/"/g, '""')}"`).join(';');
   csvRows.push(headerRow);
   
   // 2. Data rows
@@ -17,7 +20,7 @@ export function exportToCSV(data: any[], filename: string, headers: { key: strin
       const stringVal = val === undefined || val === null ? '' : String(val);
       return `"${stringVal.replace(/"/g, '""')}"`;
     });
-    csvRows.push(values.join(','));
+    csvRows.push(values.join(';'));
   }
   
   // 3. Create blob with UTF-8 BOM for proper Spanish characters in Excel

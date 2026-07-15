@@ -10,7 +10,7 @@ interface ConfiguracionProps {
   onCreateBackup: () => Promise<any>;
   onRestoreBackup: (filename: string) => Promise<any>;
   onRestoreUpload: (jsonContent: string) => Promise<any>;
-  onClearDatabase: () => Promise<any>;
+  onClearDatabase: (password: string) => Promise<any>;
 }
 
 export default function Configuracion({
@@ -37,21 +37,38 @@ export default function Configuracion({
   const [dragOver, setDragOver] = useState(false);
   const [clearing, setClearing] = useState(false);
 
-  const handleClearDatabase = async () => {
-    const confirm1 = confirm('⚠️ ATENCIÓN CRÍTICA: ¿Está absolutamente seguro de que desea VACIAR COMPLETAMENTE la base de datos? Se eliminarán permanentemente todos los movimientos, el kardex, las ubicaciones, responsables y conductores. Los usuarios y la configuración corporativa se mantendrán.');
-    if (!confirm1) return;
+  // Database Clear Modal States
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [clearPasswordInput, setClearPasswordInput] = useState('');
+  const [clearError, setClearError] = useState('');
 
-    const confirm2 = confirm('🚨 CONFIRMACIÓN DE SEGURIDAD: Esta acción es irreversible. Se creará un respaldo de seguridad automático ("AUTO_ANTES_DE_VACIADO") antes de proceder. ¿Confirmar vaciado total?');
-    if (!confirm2) return;
+  const handleOpenClearModal = () => {
+    setClearPasswordInput('');
+    setClearError('');
+    setShowClearModal(true);
+  };
+
+  const handleConfirmClearDatabase = async () => {
+    if (!clearPasswordInput) {
+      setClearError('Por favor, ingrese la contraseña de seguridad.');
+      return;
+    }
+    if (clearPasswordInput !== '76259984') {
+      setClearError('Contraseña incorrecta. Acción cancelada por seguridad.');
+      return;
+    }
 
     setClearing(true);
+    setClearError('');
     setStatusMsg('');
     setStatusError('');
     try {
-      await onClearDatabase();
+      await onClearDatabase(clearPasswordInput);
       setStatusMsg('La base de datos se ha vaciado por completo con éxito. El sistema ha quedado a cero para nuevos registros.');
+      setShowClearModal(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
+      setClearError(err.message || 'Error al vaciar la base de datos.');
       setStatusError(err.message || 'Error al vaciar la base de datos.');
     } finally {
       setClearing(false);
@@ -373,13 +390,69 @@ export default function Configuracion({
             </div>
 
             <button
-              onClick={handleClearDatabase}
+              onClick={handleOpenClearModal}
               disabled={clearing}
               className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-bold px-3.5 py-2 rounded-lg text-xs cursor-pointer shadow-sm active:scale-95 transition-all whitespace-nowrap self-end sm:self-center"
             >
               <Trash2 className="w-3.5 h-3.5" />
               {clearing ? 'Vaciando...' : 'Vaciar Base de Datos'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM CLEAR DATABASE MODAL */}
+      {showClearModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex gap-3 items-start text-red-600">
+              <AlertTriangle className="w-6 h-6 flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider font-display">⚠️ Confirmación de Vaciado</h3>
+                <p className="text-xs text-red-600 font-semibold">Esta acción es irreversible y vaciará completamente el sistema.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Se eliminarán permanentemente todos los registros de movimientos, el kardex, las ubicaciones, responsables y conductores. Los usuarios y la configuración corporativa se mantendrán intactos. Se generará un respaldo de seguridad automático antes del vaciado.
+            </p>
+
+            <div className="space-y-1.5 pt-2">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Ingrese la contraseña de seguridad para proceder:
+              </label>
+              <input
+                type="password"
+                value={clearPasswordInput}
+                onChange={e => {
+                  setClearPasswordInput(e.target.value);
+                  setClearError('');
+                }}
+                placeholder="Contraseña de seguridad"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:bg-white focus:outline-none"
+              />
+              {clearError && (
+                <p className="text-[11px] text-red-600 font-semibold">{clearError}</p>
+              )}
+            </div>
+
+            <div className="flex gap-2.5 pt-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowClearModal(false)}
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmClearDatabase}
+                disabled={clearing}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-bold rounded-lg text-xs transition-all cursor-pointer shadow-sm"
+              >
+                {clearing ? 'Vaciando...' : 'Confirmar Vaciado Total'}
+              </button>
+            </div>
           </div>
         </div>
       )}

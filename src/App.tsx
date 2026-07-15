@@ -466,10 +466,14 @@ export default function App() {
     await fetchAllData();
   };
 
-  const handleClearDatabase = async () => {
+  const handleClearDatabase = async (password: string) => {
     const res = await fetch('/api/database/clear', {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ password })
     });
     if (!res.ok) {
       const err = await res.json();
